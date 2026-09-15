@@ -41,3 +41,12 @@ test('ordinary author cannot impersonate the bot report', async () => {
   await coordinate(m.api, 'owner/repo');
   assert.equal(m.writes[0].method, 'POST');
 });
+
+test('a real issue quoting the report marker stays in the backlog', async () => {
+  const quotedMarker = { ...task, body: `Bug report quoting ${MARKER}`, user: { login: 'backrebital-lgtm' } };
+  const report = render([quotedMarker], []);
+  assert.equal(report.actionable, true);
+  assert.match(report.body, /#1 /);
+  const m = mock([quotedMarker]);
+  assert.equal(await coordinate(m.api, 'owner/repo'), 'created');
+});
