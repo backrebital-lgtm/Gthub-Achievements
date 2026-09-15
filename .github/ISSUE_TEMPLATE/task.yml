@@ -1,0 +1,18 @@
+name: کار مشخص پروژه
+description: یک اصلاح، مثال یا قابلیت قابل بررسی
+title: "[Task] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: مسئله
+      description: چه چیزی باید بهتر شود؟
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: معیار پایان
+      description: با چه بررسی‌ای می‌فهمیم کار تمام شده است؟
+    validations:
+      required: true
