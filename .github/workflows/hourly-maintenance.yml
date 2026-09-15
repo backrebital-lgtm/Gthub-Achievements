@@ -3,6 +3,11 @@ on:
   schedule:
     - cron: '17 * * * *'
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Preview assignments and review requests without writing'
+        type: boolean
+        default: true
 permissions:
   contents: read
 concurrency:
@@ -10,19 +15,24 @@ concurrency:
   cancel-in-progress: false
 jobs:
   coordinate:
+    if: github.repository == 'ramincsy/Gthub-Achievements'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: read
       issues: write
-      pull-requests: read
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
       - run: node --test
       - run: node scripts/check.mjs
       - name: Update work summary when state changes
         run: node scripts/coordinate.mjs
         env:
           GH_TOKEN: ${{ github.token }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}

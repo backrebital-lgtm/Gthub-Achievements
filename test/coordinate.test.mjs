@@ -50,3 +50,25 @@ test('a real issue quoting the report marker stays in the backlog', async () => 
   const m = mock([quotedMarker]);
   assert.equal(await coordinate(m.api, 'owner/repo'), 'created');
 });
+
+const config = { participants: ['a', 'b'], readyLabel: 'ready', blockedLabel: 'blocked', maxAssignedPerPerson: 2, maxPullsPerRun: 20, maxMutationsPerRun: 6 };
+test('dry run never writes even when assignment and report are needed', async () => {
+  const m = mock([{ ...task, labels: ['ready'] }]);
+  assert.equal(await coordinate(m.api, 'owner/repo', undefined, { config, dryRun: true }), 'dry-run');
+  assert.equal(m.writes.length, 0);
+});
+test('a concurrent manual assignment is not overwritten', async () => {
+  const m = mock([{ ...task, labels: ['ready'] }]);
+  const api = (route, options) => route.endsWith('/issues/1') && !options
+    ? Promise.resolve({ ...task, labels: ['ready'], assignees: [{ login: 'b' }] }) : m.api(route, options);
+  await coordinate(api, 'owner/repo', undefined, { config });
+  assert.ok(m.writes.every(write => !write.route.endsWith('/assignees')));
+});
+test('a changed PR head prevents a request based on stale data', async () => {
+  const pr = { number: 2, user: { login: 'a' }, head: { sha: 'old' }, requested_reviewers: [], state: 'open' };
+  const m = mock([], [pr]);
+  const api = (route, options) => route.includes('/reviews?') ? Promise.resolve([])
+    : route.endsWith('/pulls/2') ? Promise.resolve({ ...pr, head: { sha: 'new' } }) : m.api(route, options);
+  await coordinate(api, 'owner/repo', undefined, { config });
+  assert.ok(m.writes.every(write => !write.route.endsWith('/requested_reviewers')));
+});

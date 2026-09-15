@@ -5,7 +5,7 @@ async function walk(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
   const files = [];
   for (const entry of entries) {
-    if (['.git', 'node_modules'].includes(entry.name)) continue;
+    if (['.git', '.local', 'node_modules'].includes(entry.name)) continue;
     const file = path.join(dir, entry.name);
     if (entry.isDirectory()) files.push(...await walk(file));
     else files.push(file);
