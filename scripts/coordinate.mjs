@@ -2,8 +2,9 @@ import { appendFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
 export const MARKER = '<!-- gthub-achievements:coordination:v1 -->';
+const isReport = issue => issue.user?.login === 'github-actions[bot]' && issue.body?.includes(MARKER);
 export function render(issues, pulls) {
-  const tasks = issues.filter(i => !i.pull_request && !i.body?.includes(MARKER));
+  const tasks = issues.filter(i => !i.pull_request && !isReport(i));
   const lines = [MARKER, '# وضعیت همکاری', '',
     'گزارش خودکار؛ این متن review یا تأیید انسانی نیست.', '',
     'ramincsy: پیاده‌سازی و مثال‌ها. backrebital-lgtm: بررسی اجرا و مستندات.', '',
@@ -34,7 +35,7 @@ export async function coordinate(api, repo, summaryPath) {
   const [issues, pulls] = await Promise.all([
     list('issues?state=open'), list('pulls?state=open')
   ]);
-  const existing = issues.find(i => i.user?.login === 'github-actions[bot]' && i.body?.includes(MARKER));
+  const existing = issues.find(isReport);
   const report = render(issues, pulls);
   if (summaryPath) await appendFile(summaryPath, report.body);
   if (existing && existing.body !== report.body) {
