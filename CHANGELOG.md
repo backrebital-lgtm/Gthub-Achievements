@@ -8,6 +8,8 @@
 - Pagination, API failure and concurrency regression coverage.
 - Pinned GitHub Actions, Node.js 22 runtime, weekly Dependabot checks and CODEOWNERS.
 - Persian collaboration handbook, bug report form and documented stop controls.
+- Event-driven coordination using only trusted default-branch code; schedule remains a fallback.
+- Fresh review/workload checks, unresolved-change tracking, safe network retries and run summaries.
 
 ## 0.1.0
 

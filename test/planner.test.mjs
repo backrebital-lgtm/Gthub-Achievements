@@ -23,6 +23,13 @@ test('approval on old commit requires a fresh review', () => {
   assert.equal(reviewState(pull, [review('APPROVED', 'old')]), 'needs-review');
   assert.equal(reviewerFor(pull, [review('APPROVED', 'old')], ['a', 'b']), 'b');
 });
+
+test('unresolved changes survive a new commit but request another review', () => {
+  const reviews = [review('CHANGES_REQUESTED', 'old')];
+  assert.equal(reviewState(pull, reviews), 'changes-requested');
+  assert.equal(reviewerFor(pull, reviews, ['a', 'b']), 'b');
+  assert.equal(reviewState(pull, [...reviews, review('APPROVED', 'new', 2)]), 'approved-current-commit');
+});
 test('current approval and change request do not repeatedly request review', () => {
   for (const state of ['APPROVED', 'CHANGES_REQUESTED']) assert.equal(reviewerFor(pull, [review(state)], ['a', 'b']), null);
 });

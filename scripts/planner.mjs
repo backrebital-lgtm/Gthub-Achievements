@@ -1,11 +1,17 @@
-export function reviewState(pull, reviews) {
+function latestDecisions(pull, reviews) {
   const latest = new Map();
   for (const review of [...reviews].sort((a, b) => a.id - b.id)) {
     if (!review.user || review.user.login === pull.user.login || ['COMMENTED', 'PENDING'].includes(review.state)) continue;
     latest.set(review.user.login, review);
   }
-  const current = [...latest.values()].filter(r => r.commit_id === pull.head.sha);
-  if (current.some(r => r.state === 'CHANGES_REQUESTED')) return 'changes-requested';
+  return [...latest.values()];
+}
+
+export function reviewState(pull, reviews) {
+  const latest = latestDecisions(pull, reviews);
+  // A new commit alone does not resolve an outstanding request for changes.
+  if (latest.some(r => r.state === 'CHANGES_REQUESTED')) return 'changes-requested';
+  const current = latest.filter(r => r.commit_id === pull.head.sha);
   if (current.some(r => r.state === 'APPROVED')) return 'approved-current-commit';
   if ((pull.requested_reviewers ?? []).length) return 'review-requested';
   return 'needs-review';
@@ -33,7 +39,7 @@ export function reviewerFor(pull, reviews, participants) {
   if (pull.draft || !participants.includes(pull.user.login)) return null;
   const peer = participants.find(p => p !== pull.user.login);
   if (!peer || (pull.requested_reviewers ?? []).some(r => r.login === peer)) return null;
-  const relevant = reviews.filter(r => r.user?.login === peer);
-  if (reviewState({ ...pull, requested_reviewers: [] }, relevant) !== 'needs-review') return null;
+  const decision = latestDecisions(pull, reviews).find(r => r.user.login === peer);
+  if (decision?.commit_id === pull.head.sha && ['APPROVED', 'CHANGES_REQUESTED'].includes(decision.state)) return null;
   return peer;
 }
