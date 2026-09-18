@@ -51,9 +51,15 @@ PR غیرپیش‌نویس یکی از دو عضو برای عضو دیگر در
 
 با خاموش‌کردن گردش‌کار، هماهنگی خودکار متوقف می‌شود. زمان‌بندی هوشمند Codex را جداگانه در برنامه متوقف کنید.
 
+## گردش‌کارهای نقش‌محور
+
+درخواست بررسی هنگام باز شدن PR و اعتبارسنجی `Co-authored-by` جدا از این هماهنگ‌کننده اجرا می‌شوند. هماهنگ‌کننده همچنان درخواست جاافتاده را جبران می‌کند و سقف `maxMutationsPerRun` دارد. شمارش PRهای ادغام‌شده فقط در `Collaboration progress report` و بدون ساخت Issue/PR است. شرح روزبه‌روز: [workflows.fa.md](workflows.fa.md).
+
 ## مسیر توسعه
 
 - [مثال عملی branch، commit، PR، close و merge](examples/branch-pr.fa.md)
 - [انتساب commit، co-author واقعی و Q&A](examples/attribution.fa.md)
+- پرسش واقعی در Discussions Q&A با قالب مخزن؛ پاسخ پذیرفته‌شده جعل نشود.
+- [گردش‌کارهای دو حساب](workflows.fa.md)
 - پیگیری رویدادهای عمومی واجد بررسی؛ شمارش رویدادها معادل تأیید نشان توسط GitHub نیست.
 - وابستگی بومی [`blocked by`](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/creating-issue-dependencies) برای کارهای آماده خوانده می‌شود؛ برچسب `blocked` توقف دستی است. API وابستگی [REST issue dependencies](https://docs.github.com/en/rest/issues/issue-dependencies) است و فقط GET مجاز است.

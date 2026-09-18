@@ -90,12 +90,13 @@ test('only coordination write routes are allowed', () => {
   assert.doesNotThrow(() => assertAllowedRoute('GET', '/repos/a/b/issues?state=open&page=1'));
   assert.doesNotThrow(() => assertAllowedRoute('GET', '/repos/a/b/issues/3/dependencies/blocked_by'));
   assert.doesNotThrow(() => assertAllowedRoute('POST', '/repos/a/b/issues/3/assignees'));
+  assert.doesNotThrow(() => assertAllowedRoute('GET', '/repos/a/b/pulls/4/commits?per_page=100&page=1'));
   assert.doesNotThrow(() => assertAllowedRoute('POST', '/repos/a/b/pulls/4/requested_reviewers'));
   assert.throws(() => assertAllowedRoute('POST', '/repos/a/b/issues/3/dependencies/blocked_by'), /not allowed/);
   assert.throws(() => assertAllowedRoute('DELETE', '/repos/a/b/issues/3/dependencies/blocked_by/9'), /not allowed/);
   assert.throws(() => assertAllowedRoute('GET', '/repos/a/b/actions/secrets'), /not allowed/);
   assert.throws(() => assertAllowedRoute('GET', '/user'), /Only repository API routes/);
-  assert.throws(() => assertAllowedRoute('POST', '/repos/a/b/git/blobs'), /not allowed/);
+  assert.throws(() => assertAllowedRoute('POST', '/repos/a/b/pulls/4/commits'), /not allowed/);
   assert.throws(() => assertAllowedRoute('GET', 'https://evil.example/repos/a/b/issues'), /Only repository API routes/);
 });
 

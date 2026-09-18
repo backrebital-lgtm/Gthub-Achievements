@@ -36,12 +36,16 @@ npm run check
 
 زمان اجرای GitHub Actions ممکن است تأخیر داشته باشد. زمان‌بندی باید روی شاخهٔ پیش‌فرض باشد و در مخزن عمومی پس از ۶۰ روز بی‌فعالیتی ممکن است غیرفعال شود.
 
+گردش‌کارهای نقش‌محور (اعتبارسنجی `Co-authored-by`، درخواست بررسی متقابل، گزارش شمارش PRهای ادغام‌شده) در [راهنمای گردش‌کار](docs/workflows.fa.md) آمده‌اند. آن‌ها PR خالی یا فعالیت ساختگی تولید نمی‌کنند.
+
 ## شروع کار
 
 - [راهنمای مشارکت](CONTRIBUTING.md)
 - [مثال عملی branch، PR، close و merge](docs/examples/branch-pr.fa.md)
 - [انتساب commit، co-author و Discussions](docs/examples/attribution.fa.md)
 - [نشان‌ها و محدودیت شواهد](docs/achievements.fa.md)
+- [English achievement matrix](docs/achievements.md)
+- [گردش‌کارهای دو حساب](docs/workflows.fa.md)
 - [تنظیم همکاری و دسترسی](docs/setup.fa.md)
 - [صف کار، بررسی، اولویت‌ها و اجرای آزمایشی](docs/collaboration.fa.md)
 

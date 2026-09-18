@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.2
+
+- Dual-account workflows for co-author trailer checks, peer review requests and a read-only merged-PR progress report.
+- Achievement research matrix with official vs community labels; Q&A discussion template without fabricated answers.
+- Hourly maintenance coordinator unchanged.
+
 ## 0.3.1
 
 - Coordinator reads native GitHub `blocked by` links before assigning ready work; open blockers skip assignment, closed blockers do not, and the `blocked` label remains the manual stop.

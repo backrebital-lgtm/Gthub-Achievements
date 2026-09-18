@@ -1,0 +1,35 @@
+name: Request peer review
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+permissions:
+  contents: read
+concurrency:
+  group: peer-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  request:
+    if: >
+      github.repository == 'ramincsy/Gthub-Achievements' &&
+      github.event.pull_request.draft == false &&
+      (github.event.pull_request.user.login == 'ramincsy' ||
+       github.event.pull_request.user.login == 'backrebital-lgtm')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Check out the pull request
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+      - name: Request the other member
+        run: node scripts/peer-review.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}

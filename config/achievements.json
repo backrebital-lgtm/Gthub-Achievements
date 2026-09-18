@@ -1,0 +1,25 @@
+{
+  "disclaimer": "Community-reported thresholds are not official GitHub documentation. Achievements are in public preview and are not guaranteed.",
+  "officialCatalogPublished": false,
+  "pullShark": {
+    "source": "community",
+    "event": "merged-pull-requests-authored",
+    "tiers": [2, 16, 128, 1024]
+  },
+  "pairExtraordinaire": {
+    "source": "community",
+    "event": "coauthored-commits-merged-via-pull-request",
+    "tiers": [1, 10, 24, 48]
+  },
+  "galaxyBrain": {
+    "source": "community",
+    "event": "accepted-discussion-answers",
+    "tiers": [2, 8, 16, 32],
+    "notes": "Community organization discussions may be restricted."
+  },
+  "starstruck": {
+    "source": "community",
+    "event": "repository-stars",
+    "tiers": [16]
+  }
+}

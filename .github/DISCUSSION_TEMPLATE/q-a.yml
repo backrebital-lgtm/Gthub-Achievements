@@ -1,0 +1,42 @@
+title: "[Q&A] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        این فرم برای **پرسش واقعی** دربارهٔ اجرای پروژه است. Discussions از نوع Q&A ممکن است در مسیر Galaxy Brain شمرده شود؛ GitHub فهرست رسمی کامل نشان‌ها را منتشر نکرده و هیچ پاسخی اینجا به‌صورت ساختگی پذیرفته نمی‌شود.
+
+        پرسش و پاسخ نمایشی، تکراری یا تهی برای افزایش شمارنده ممنوع است. این قالب برای دستهٔ `Q&A` با slug `q-a` است. عیب‌یابی انتساب: docs/examples/attribution.fa.md.
+  - type: textarea
+    id: question
+    attributes:
+      label: پرسش
+      description: چه چیزی را هنگام کار با این مخزن نتوانستید انجام دهید یا درک کنید؟
+      placeholder: مثلاً پس از اجرای npm test این خروجی را می‌بینم و انتظار داشتم...
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: آنچه امتحان شد
+      description: دستور، فایل یا مرحله‌ای که انجام دادید. رمز، توکن و PAT ننویسید.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: موضوع
+      options:
+        - اجرای محلی و تست
+        - گردش‌کار Actions
+        - نویسندگی مشترک / Co-authored-by
+        - صف کار و بررسی PR
+        - مورد دیگر
+    validations:
+      required: true
+  - type: checkboxes
+    id: honest
+    attributes:
+      label: تأیید
+      options:
+        - label: این پرسش واقعی است و برای ساختن پاسخ پذیرفته‌شده یا نشان Galaxy Brain ساخته نشده است.
+          required: true
