@@ -1,0 +1,9 @@
+{
+  "repository": "ramincsy/Gthub-Achievements",
+  "participants": ["ramincsy", "backrebital-lgtm"],
+  "readyLabel": "ready-for-work",
+  "blockedLabel": "blocked",
+  "maxAssignedPerPerson": 2,
+  "maxPullsPerRun": 20,
+  "maxMutationsPerRun": 6
+}
