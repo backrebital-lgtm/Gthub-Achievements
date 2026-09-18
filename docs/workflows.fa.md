@@ -15,7 +15,7 @@
    ```
 
    ایمیل نمونهٔ مستندات (`NAME@EXAMPLE.COM`) رد می‌شود. ترجیح: noreply گیت‌هاب همان حساب (از Settings → Emails، نه حدس `ID`).
-4. PR غیرپیش‌نویس باز کنید. `Request peer review` از backrebital-lgtm بررسی می‌خواهد. `Validate co-authors` قالب trailer را می‌سنجد. `CI` تست و لینک‌ها را اجرا می‌کند (`opened` / `synchronize` / `reopened` / `ready_for_review`).
+4. PR غیرپیش‌نویس باز کنید. `Request peer review` از عضو دیگر بررسی می‌خواهد؛ اگر نویسنده عامل (`cursor[bot]`) است و commit همان PR trailer noreply خوش‌فرم یک عضو دارد، از عضوی که هنوز reviewer نیست درخواست می‌شود. `Validate co-authors` قالب trailer را می‌سنجد. `CI` تست و لینک‌ها را اجرا می‌کند (`opened` / `synchronize` / `reopened` / `ready_for_review`).
 5. پس از اصلاحات، بررسی همان commit را بگیرید؛ این پروژه برای YOLO بدون review ادغام نمی‌کند. مسیر عملی PR: [مثال branch و PR](examples/branch-pr.fa.md).
 
 ## روز کاری backrebital-lgtm (بررسی و مستندات)
@@ -30,7 +30,7 @@
 | --- | --- | --- | --- |
 | `CI` | سلامت | `npm test` و `npm run check` روی `opened` / `synchronize` / `reopened` / `ready_for_review`؛ **کد همان PR** را بدون `GH_TOKEN` اجرا می‌کند | درخواست بررسی، merge |
 | `Validate co-authors` | Pair Extraordinaire (قالب) | trailerهای `Co-authored-by` را از API همان PR می‌خواند و با **کد شاخهٔ پیش‌فرض** می‌سنجد | ایمیل را به حساب وصل نمی‌کند؛ trailer نمی‌سازد؛ کد PR را اجرا نمی‌کند |
-| `Request peer review` | بررسی متقابل | با باز شدن PR غیرپیش‌نویس یکی از دو عضو، از عضو دیگر بررسی می‌خواهد؛ **کد شاخهٔ پیش‌فرض** را اجرا می‌کند | approve، merge، تکرار درخواست موجود، اجرای کد PR |
+| `Request peer review` | بررسی متقابل | با PR غیرپیش‌نویس یکی از دو عضو، از عضو دیگر بررسی می‌خواهد؛ اگر نویسنده عضو نیست ولی trailer noreply خوش‌فرم یک عضو روی commit همان PR هست، از عضوی که هنوز reviewer نیست درخواست می‌شود؛ **کد شاخهٔ پیش‌فرض** را اجرا می‌کند | approve، merge، تکرار درخواست موجود، درخواست برای bot/خارجی بدون trailer عضو، اجرای کد PR |
 | `Hourly maintenance` | هماهنگی صف | واگذاری کار آماده، درخواست بررسی جاافتاده، به‌روزرسانی Issue وضعیت پس از تغییر صف یا ثبت/کنارگذاشتن review | کد نمی‌نویسد؛ PR خالی نمی‌سازد؛ merge نمی‌کند؛ review فقط-کامنت را اجرا نمی‌کند |
 | `Collaboration progress report` | پیگیری Pull Shark و pair | با اجرا دستی یا دوشنبهٔ هفته (۰۳:۴۷ UTC) PRهای mergeشده و trailerهای خوش‌فرم `Co-authored-by` روی commitهای آن‌ها را می‌شمارد؛ **کد شاخهٔ پیش‌فرض** را اجرا می‌کند | Issue/PR نمی‌سازد؛ نشان را تأیید نمی‌کند؛ شاخهٔ انتخاب‌شده در `workflow_dispatch` را اجرا نمی‌کند |
 

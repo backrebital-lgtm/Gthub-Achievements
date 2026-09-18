@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.7
+
+- `Request peer review` also covers non-member PR authors (including `cursor[bot]`) when a commit on that PR has a well-formed project-member GitHub noreply trailer. Existing member-authored behavior is unchanged.
+- Hourly maintenance uses the same rule for missed review requests. Bots and external authors without a member trailer still get no request. The workflow still does not approve or merge.
+- Two accounts share one owner; an automatic request is not an independent human review. Achievements are not guaranteed.
+
 ## 0.3.6
 
 - Local `npm run coauthor` validates `Co-authored-by` trailers from `git log` without `GH_TOKEN`. CI runs it on the triggering ref; solo commits without trailers remain allowed.

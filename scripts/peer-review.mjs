@@ -1,5 +1,6 @@
 import { appendFile, readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
+import { mapPullCommits } from './coauthor.mjs';
 import { createApi, listAll } from './github.mjs';
 import { reviewerFor } from './planner.mjs';
 
@@ -7,8 +8,13 @@ export async function requestPeerReview(api, repo, pullNumber, participants) {
   if (!/^\d+$/.test(String(pullNumber))) throw new Error('A numeric pull request number is required.');
   const pull = await api(`/repos/${repo}/pulls/${pullNumber}`);
   const reviews = await listAll(api, `/repos/${repo}/pulls/${pullNumber}/reviews`);
-  const reviewer = reviewerFor(pull, reviews, participants);
-  if (!reviewer) return { status: 'skipped', reviewer: null, author: pull.user?.login ?? null };
+  const author = pull.user?.login ?? null;
+  let commits;
+  if (!pull.draft && !participants.includes(author)) {
+    commits = mapPullCommits(await listAll(api, `/repos/${repo}/pulls/${pullNumber}/commits`));
+  }
+  const reviewer = reviewerFor(pull, reviews, participants, { commits });
+  if (!reviewer) return { status: 'skipped', reviewer: null, author };
   try {
     await api(`/repos/${repo}/pulls/${pullNumber}/requested_reviewers`, {
       method: 'POST',
@@ -25,7 +31,7 @@ export function renderPeerReviewSummary(result) {
   const lines = ['## Peer review request', ''];
   if (result.status === 'requested') lines.push(`Requested a review from @${result.reviewer} for a PR by @${result.author}.`);
   else if (result.status === 'already-requested') lines.push(`@${result.reviewer} was already requested; no change.`);
-  else lines.push('No review request needed (draft, external author, existing request, or a current-commit decision).');
+  else lines.push('No review request needed (draft, bot/external author without a member noreply trailer, existing request, or a current-commit decision).');
   lines.push('', 'Two accounts share one owner. An automatic request is not an independent human review. This workflow does not approve or merge.');
   return lines.join('\n') + '\n';
 }

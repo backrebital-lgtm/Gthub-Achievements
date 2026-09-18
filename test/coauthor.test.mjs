@@ -7,6 +7,7 @@ import {
   validateTrailer,
   validatePullCommits,
   mapPullCommits,
+  memberLoginsFromNoreplyTrailers,
   renderCoauthorSummary,
   validatePullRequest
 } from '../scripts/coauthor.mjs';
@@ -78,6 +79,21 @@ test('maps GitHub commit payloads and writes a non-farming summary', () => {
     author: { login: 'ramincsy' }
   }]);
   assert.equal(mapped[0].authorLogin, 'ramincsy');
+  const participants = ['ramincsy', 'backrebital-lgtm'];
+  assert.deepEqual(memberLoginsFromNoreplyTrailers([{
+    authorLogin: 'cursor[bot]',
+    authorEmail: 'cursoragent@cursor.com',
+    message: [
+      'feat',
+      '',
+      'Co-authored-by: ramincsy <34828058+ramincsy@users.noreply.github.com>',
+      'Co-authored-by: backrebital-lgtm <329678572+backrebital-lgtm@users.noreply.github.com>'
+    ].join('\n')
+  }], participants), ['ramincsy', 'backrebital-lgtm']);
+  assert.deepEqual(memberLoginsFromNoreplyTrailers([{
+    authorLogin: 'cursor[bot]',
+    message: 'chore\n\nCo-authored-by: ramincsy <ramincsy@example.com>'
+  }], participants), []);
   const summary = renderCoauthorSummary({ ok: true, trailerCount: 0, errors: [] });
   assert.match(summary, /not guaranteed/);
   assert.doesNotMatch(summary, /open empty|farm/i);

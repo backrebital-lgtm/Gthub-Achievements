@@ -1,3 +1,7 @@
+import { memberLoginsFromNoreplyTrailers } from './coauthor.mjs';
+
+const BOT_LOGIN = /\[bot\]$/i;
+
 function latestDecisions(pull, reviews) {
   const latest = new Map();
   for (const review of [...reviews].sort((a, b) => a.id - b.id)) {
@@ -72,11 +76,22 @@ export function planAssignments(issues, config, blockersByNumber) {
   return actions;
 }
 
-export function reviewerFor(pull, reviews, participants) {
-  if (pull.draft || !participants.includes(pull.user.login)) return null;
-  const peer = participants.find(p => p !== pull.user.login);
-  if (!peer || (pull.requested_reviewers ?? []).some(r => r.login === peer)) return null;
-  const decision = latestDecisions(pull, reviews).find(r => r.user.login === peer);
-  if (decision?.commit_id === pull.head.sha && ['APPROVED', 'CHANGES_REQUESTED'].includes(decision.state)) return null;
-  return peer;
+export function reviewCandidates(pull, participants, commits) {
+  const author = pull.user?.login;
+  const members = participants.filter(p => !BOT_LOGIN.test(p) && p !== author);
+  if (participants.includes(author)) return members;
+  if (!memberLoginsFromNoreplyTrailers(commits, participants).length) return [];
+  return members;
+}
+
+export function reviewerFor(pull, reviews, participants, { commits } = {}) {
+  if (pull.draft) return null;
+  const requested = new Set((pull.requested_reviewers ?? []).map(r => r.login));
+  for (const peer of reviewCandidates(pull, participants, commits)) {
+    if (requested.has(peer) || BOT_LOGIN.test(peer)) continue;
+    const decision = latestDecisions(pull, reviews).find(r => r.user.login === peer);
+    if (decision?.commit_id === pull.head.sha && ['APPROVED', 'CHANGES_REQUESTED'].includes(decision.state)) continue;
+    return peer;
+  }
+  return null;
 }

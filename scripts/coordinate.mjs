@@ -1,5 +1,6 @@
 import { appendFile, readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
+import { mapPullCommits } from './coauthor.mjs';
 import { createApi, listAll, listBlockedBy } from './github.mjs';
 import { validateConfig } from './config.mjs';
 import { planAssignments, reviewerFor, reviewState, assignmentCandidates, openBlockers, issueNextAction, pullNextAction } from './planner.mjs';
@@ -97,7 +98,11 @@ export async function coordinate(api, repo, summaryPath, options = {}) {
     for (const pull of inspectable) {
       const reviews = await listAll(api, `/repos/${repo}/pulls/${pull.number}/reviews`);
       pull.reviewStatus = reviewState(pull, reviews);
-      const reviewer = reviewerFor(pull, reviews, config.participants);
+      let commits;
+      if (!pull.draft && !config.participants.includes(pull.user?.login)) {
+        commits = mapPullCommits(await listAll(api, `/repos/${repo}/pulls/${pull.number}/commits`));
+      }
+      const reviewer = reviewerFor(pull, reviews, config.participants, { commits });
       if (!reviewer || mutations >= config.maxMutationsPerRun) continue;
       if (dryRun) {
         plans.push(`Would request @${reviewer} to review #${pull.number}`);
@@ -111,7 +116,7 @@ export async function coordinate(api, repo, summaryPath, options = {}) {
       }
       const freshReviews = await listAll(api, `/repos/${repo}/pulls/${pull.number}/reviews`);
       pull.reviewStatus = reviewState(fresh, freshReviews);
-      if (reviewerFor(fresh, freshReviews, config.participants) !== reviewer) continue;
+      if (reviewerFor(fresh, freshReviews, config.participants, { commits }) !== reviewer) continue;
       await api(`/repos/${repo}/pulls/${pull.number}/requested_reviewers`, { method: 'POST', body: { reviewers: [reviewer] } });
       mutations++;
       plans.push(`Requested @${reviewer} to review #${pull.number}`);

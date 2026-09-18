@@ -42,6 +42,20 @@ test('pending review, drafts and external authors do not get automatic requests'
   assert.equal(reviewerFor({ ...pull, draft: true }, [], ['a', 'b']), null);
   assert.equal(reviewerFor({ ...pull, user: { login: 'external' } }, [], ['a', 'b']), null);
 });
+test('non-member authors need a well-formed member noreply trailer before a request', () => {
+  const bot = { ...pull, user: { login: 'cursor[bot]' } };
+  const commits = [{
+    authorLogin: 'cursor[bot]',
+    authorEmail: 'cursoragent@cursor.com',
+    message: 'feat\n\nCo-authored-by: a <1+a@users.noreply.github.com>'
+  }];
+  assert.equal(reviewerFor(bot, [], ['a', 'b']), null);
+  assert.equal(reviewerFor(bot, [], ['a', 'b'], { commits }), 'a');
+  assert.equal(reviewerFor({ ...bot, requested_reviewers: [{ login: 'a' }] }, [], ['a', 'b'], { commits }), 'b');
+  assert.equal(reviewerFor({ ...bot, user: { login: 'github-actions[bot]' } }, [], ['a', 'b'], {
+    commits: [{ authorLogin: 'github-actions[bot]', message: 'chore' }]
+  }), null);
+});
 test('open native blockers skip assignment; closed blockers do not', () => {
   const blockers = new Map([
     [1, [{ number: 9, state: 'open', body: 'UNTRUSTED' }]],

@@ -22,7 +22,7 @@
 2. `npm test`، `npm run check` و `npm run coauthor` روی آخرین commit موفق‌اند.
 3. `Co-authored-by` فقط برای همکاری واقعی در همان commit است. قالب: `Co-authored-by: NAME <ID+login@users.noreply.github.com>`. شناسه را با `gh api users/LOGIN --jq .id` بخوانید و با **Settings → Emails** همان حساب مقایسه کنید.
 4. دو حساب [ramincsy](https://github.com/ramincsy) و [backrebital-lgtm](https://github.com/backrebital-lgtm) **یک مالک** دارند. درخواست بررسی بین آن‌ها دو reviewer مستقل نمی‌سازد.
-5. گردش‌کار `Request peer review` فقط وقتی نویسندهٔ GitHub برابر ramincsy یا backrebital-lgtm باشد اجرا می‌شود. اگر نویسنده `cursor[bot]` یا هویت دیگری است، بررسی را دستی از عضو دیگر بخواهید.
+5. گردش‌کار `Request peer review` برای PR غیرپیش‌نویس یکی از دو عضو از عضو دیگر بررسی می‌خواهد. اگر نویسنده `cursor[bot]` یا هویت دیگری است ولی همان PR trailer noreply خوش‌فرم یک عضو دارد، از عضوی که هنوز reviewer نیست بررسی خواسته می‌شود. بدون trailer عضو، برای bot یا نویسندهٔ خارجی درخواست ساخته نمی‌شود. گردش‌کار approve یا merge نمی‌کند.
 6. **Quickdraw هدف این پروژه نیست.** Issue یا PR را ظرف حدود ۵ دقیقه پس از باز شدن نبندید تا رویداد نشان ساخته شود. بستن فقط وقتی کار منسوخ یا تکراری است.
 7. **YOLO هدف این پروژه نیست.** بدون بررسی واقعی merge نکنید. گردش‌کارها approve یا merge نمی‌کنند.
 

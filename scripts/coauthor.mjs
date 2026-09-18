@@ -69,6 +69,25 @@ export function mapPullCommits(apiCommits) {
   }));
 }
 
+export function memberLoginsFromNoreplyTrailers(commits, participants) {
+  const found = [];
+  for (const commit of commits ?? []) {
+    const parsed = parseCoAuthorTrailers(commit.message);
+    for (const trailer of parsed.trailers) {
+      if (validateTrailer(trailer, {
+        authorEmail: commit.authorEmail,
+        authorLogin: commit.authorLogin,
+        participants
+      }).length) continue;
+      const login = githubLoginFromNoreply(trailer.email);
+      if (!login) continue;
+      const member = participants.find(p => p.toLowerCase() === login.toLowerCase());
+      if (member && !found.includes(member)) found.push(member);
+    }
+  }
+  return found;
+}
+
 export function validatePullCommits(commits, { participants = [], requirePeer = false } = {}) {
   const results = [];
   const errors = [];

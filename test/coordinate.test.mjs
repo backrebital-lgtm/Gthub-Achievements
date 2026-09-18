@@ -289,3 +289,35 @@ test('dependency inspection is capped and leftover ready work is not assigned', 
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test('bot-authored PR with a member noreply trailer requests a member reviewer', async () => {
+  const pr = {
+    number: 2, user: { login: 'cursor[bot]' }, head: { sha: 'abc' },
+    requested_reviewers: [], state: 'open', draft: false
+  };
+  const m = mock([], [pr]);
+  const api = (route, options) => route.includes('/commits')
+    ? Promise.resolve([{
+      sha: 'abc',
+      commit: { message: 'feat\n\nCo-authored-by: a <1+a@users.noreply.github.com>', author: { email: 'bot@x' } },
+      author: { login: 'cursor[bot]' }
+    }])
+    : route.endsWith('/pulls/2') ? Promise.resolve(pr)
+      : m.api(route, options);
+  await coordinate(api, 'owner/repo', undefined, { config });
+  assert.ok(m.writes.some(write => write.route.endsWith('/requested_reviewers') && write.body.reviewers[0] === 'a'));
+});
+
+test('bot-authored PR without a member trailer does not request review', async () => {
+  const pr = {
+    number: 2, user: { login: 'github-actions[bot]' }, head: { sha: 'abc' },
+    requested_reviewers: [], state: 'open', draft: false
+  };
+  const m = mock([], [pr]);
+  const api = (route, options) => route.includes('/commits')
+    ? Promise.resolve([{ sha: 'abc', commit: { message: 'chore', author: { email: 'bot@x' } }, author: { login: 'github-actions[bot]' } }])
+    : route.endsWith('/pulls/2') ? Promise.resolve(pr)
+      : m.api(route, options);
+  await coordinate(api, 'owner/repo', undefined, { config });
+  assert.ok(m.writes.every(write => !write.route.endsWith('/requested_reviewers')));
+});

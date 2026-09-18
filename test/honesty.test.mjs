@@ -17,6 +17,8 @@ test('Persian docs say Quickdraw and YOLO are not project automation goals', asy
   assert.match(fa, /خودکارسازی نمی‌شود/);
   assert.match(contributing, /npm run coauthor/);
   assert.match(contributing, /یک مالک/);
+  assert.match(contributing, /trailer noreply خوش‌فرم یک عضو/);
+  assert.doesNotMatch(contributing, /فقط وقتی نویسندهٔ GitHub برابر/);
 });
 
 test('achievement config records Quickdraw and YOLO as not automated', async () => {

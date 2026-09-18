@@ -64,6 +64,8 @@ test('collaboration workflows are pinned, PAT-free, and do not farm empty PRs or
   assert.match(peer, /scripts\/peer-review\.mjs/);
   assert.match(peer, /ref: \$\{\{ github\.event\.repository\.default_branch \}\}/);
   assert.match(peer, /allow-unsafe-pr-checkout: false/);
+  assert.match(peer, /github\.event\.pull_request\.draft == false/);
+  assert.doesNotMatch(peer, /user\.login == 'ramincsy'/);
   assert.doesNotMatch(peer, /pull_request_target:/);
   assert.doesNotMatch(peer, /ref: \$\{\{ github\.event\.pull_request/);
   assert.doesNotMatch(peer, /merge|approve/i);
