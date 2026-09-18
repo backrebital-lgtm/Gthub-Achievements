@@ -13,6 +13,14 @@ export function githubLoginFromNoreply(email) {
   return match ? match[2] : null;
 }
 
+export function githubNoreplyAddress(login, userId) {
+  if (typeof login !== 'string' || !/^[A-Za-z0-9-]+$/.test(login)) {
+    throw new Error('A GitHub username is required.');
+  }
+  if (!Number.isInteger(userId) || userId < 1) throw new Error('A numeric GitHub user id is required.');
+  return `${userId}+${login}@users.noreply.github.com`;
+}
+
 export function parseCoAuthorTrailers(message) {
   const trailers = [];
   const errors = [];

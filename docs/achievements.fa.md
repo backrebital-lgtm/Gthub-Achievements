@@ -41,7 +41,7 @@ Co-authored-by: NAME <EMAIL>
 
 ## شواهد
 
-جزئیات عملی انتساب و Q&A: [عیب‌یابی co-author و Discussions](examples/attribution.fa.md). گردش‌کارها: [workflows.fa.md](workflows.fa.md).
+جزئیات عملی انتساب و Q&A: [عیب‌یابی co-author و Discussions](examples/attribution.fa.md). مثال trailer با شناسهٔ تأییدشده: [Pair Extraordinaire](examples/pair-extraordinaire.fa.md). گردش‌کارها: [workflows.fa.md](workflows.fa.md).
 
 - [مرجع رسمی پروفایل و Achievements](https://docs.github.com/en/account-and-profile/reference/profile-reference) — پیش‌نمایش عمومی؛ بدون کاتالوگ کامل.
 - [نویسندگی مشترک](https://docs.github.com/en/pull-requests/how-tos/commit-changes/creating-a-commit-with-multiple-authors)

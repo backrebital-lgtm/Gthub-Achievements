@@ -24,4 +24,4 @@ Heart On Your Sleeve and Open Sourcerer are not targets here; a reliable public 
 
 Co-author trailer format (official): `Co-authored-by: NAME <EMAIL>` with an address linked to the co-author’s GitHub account, or their `users.noreply.github.com` address. Details: [Creating a commit with multiple authors](https://docs.github.com/en/pull-requests/how-tos/commit-changes/creating-a-commit-with-multiple-authors).
 
-Persian handbook: [achievements.fa.md](achievements.fa.md). Day-to-day Actions: [workflows.fa.md](workflows.fa.md). Co-author and Q&A troubleshooting: [attribution.fa.md](examples/attribution.fa.md).
+Persian handbook: [achievements.fa.md](achievements.fa.md). Day-to-day Actions: [workflows.fa.md](workflows.fa.md). Co-author and Q&A troubleshooting: [attribution.fa.md](examples/attribution.fa.md). Verified noreply example: [pair-extraordinaire.fa.md](examples/pair-extraordinaire.fa.md).

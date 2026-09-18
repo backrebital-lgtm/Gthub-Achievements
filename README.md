@@ -43,6 +43,7 @@ npm run check
 - [راهنمای مشارکت](CONTRIBUTING.md)
 - [مثال عملی branch، PR، close و merge](docs/examples/branch-pr.fa.md)
 - [انتساب commit، co-author و Discussions](docs/examples/attribution.fa.md)
+- [مثال عملی Pair Extraordinaire و noreply تأییدشده](docs/examples/pair-extraordinaire.fa.md)
 - [نشان‌ها و محدودیت شواهد](docs/achievements.fa.md)
 - [English achievement matrix](docs/achievements.md)
 - [گردش‌کارهای دو حساب](docs/workflows.fa.md)

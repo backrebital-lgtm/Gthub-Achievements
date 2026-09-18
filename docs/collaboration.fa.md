@@ -65,6 +65,7 @@ PR غیرپیش‌نویس یکی از دو عضو برای عضو دیگر در
 
 - [مثال عملی branch، commit، PR، close و merge](examples/branch-pr.fa.md)
 - [انتساب commit، co-author واقعی و Q&A](examples/attribution.fa.md)
+- [trailer با شناسهٔ عمومی تأییدشده و چک‌لیست Settings](examples/pair-extraordinaire.fa.md)
 - پرسش واقعی در Discussions Q&A با قالب مخزن؛ پاسخ پذیرفته‌شده جعل نشود.
 - [گردش‌کارهای دو حساب](workflows.fa.md)
 - پیگیری رویدادهای عمومی واجد بررسی؛ شمارش رویدادها معادل تأیید نشان توسط GitHub نیست.

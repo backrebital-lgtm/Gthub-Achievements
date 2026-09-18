@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   githubLoginFromNoreply,
+  githubNoreplyAddress,
   parseCoAuthorTrailers,
   validateTrailer,
   validatePullCommits,
@@ -9,6 +10,15 @@ import {
   renderCoauthorSummary,
   validatePullRequest
 } from '../scripts/coauthor.mjs';
+
+test('builds the ID+login GitHub noreply address from a public user id', () => {
+  assert.equal(
+    githubNoreplyAddress('backrebital-lgtm', 329678572),
+    '329678572+backrebital-lgtm@users.noreply.github.com'
+  );
+  assert.equal(githubLoginFromNoreply(githubNoreplyAddress('ramincsy', 34828058)), 'ramincsy');
+  assert.throws(() => githubNoreplyAddress('ramincsy', 0), /numeric GitHub user id/);
+});
 
 test('parses canonical trailers and rejects malformed lines', () => {
   const parsed = parseCoAuthorTrailers([

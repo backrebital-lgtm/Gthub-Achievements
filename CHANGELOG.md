@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.5
+
+- Collaboration progress report counts well-formed peer `Co-authored-by` trailers on merged pull request commits (Pair Extraordinaire candidates only; not a grant).
+- Practical Persian Pair Extraordinaire example uses public Users API ids `34828058` (ramincsy) and `329678572` (backrebital-lgtm) and still requires Settings → Emails confirmation.
+- Two accounts share one owner; an automatic review request is not an independent human review. Achievements are not guaranteed.
+
 ## 0.3.4
 
 - Token-bearing workflows (`Validate co-authors`, `Collaboration progress report`) check out the default branch only. Co-author validation still reads PR commits through the API; it does not execute the PR tree.

@@ -1,5 +1,11 @@
 import { appendFile, readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
+import {
+  githubLoginFromNoreply,
+  mapPullCommits,
+  parseCoAuthorTrailers,
+  validateTrailer
+} from './coauthor.mjs';
 import { createApi, listAll } from './github.mjs';
 
 export function communityTier(count, tiers) {
@@ -30,7 +36,49 @@ export function mergedPullCounts(pulls, participants) {
   return { counts, merged, closedUnmerged };
 }
 
-export function renderProgress({ repository, counts, merged, closedUnmerged, tiers, generatedAt }) {
+export function pairPathStats(pullsWithCommits, participants) {
+  const counts = Object.fromEntries(participants.map(login => [login, 0]));
+  let pairCommits = 0;
+  let pairPulls = 0;
+  let malformedTrailers = 0;
+  for (const pull of pullsWithCommits ?? []) {
+    let pullHasPeer = false;
+    for (const commit of pull.commits ?? []) {
+      const parsed = parseCoAuthorTrailers(commit.message);
+      malformedTrailers += parsed.errors.length;
+      const authorLogin = String(commit.authorLogin ?? '').toLowerCase();
+      const peers = new Set();
+      for (const trailer of parsed.trailers) {
+        const trailerErrors = validateTrailer(trailer, {
+          authorEmail: commit.authorEmail,
+          authorLogin: commit.authorLogin,
+          participants
+        });
+        if (trailerErrors.length) {
+          malformedTrailers += trailerErrors.length;
+          continue;
+        }
+        const login = githubLoginFromNoreply(trailer.email);
+        if (!login) continue;
+        const member = participants.find(p => p.toLowerCase() === login.toLowerCase());
+        if (member && member.toLowerCase() !== authorLogin) peers.add(member);
+      }
+      if (peers.size) {
+        pairCommits++;
+        pullHasPeer = true;
+        for (const member of peers) counts[member]++;
+      }
+    }
+    if (pullHasPeer) pairPulls++;
+  }
+  return { counts, pairCommits, pairPulls, malformedTrailers };
+}
+
+export function renderProgress({
+  repository, counts, merged, closedUnmerged, tiers, generatedAt,
+  pair = { counts: {}, pairCommits: 0, pairPulls: 0, malformedTrailers: 0 },
+  pairTiers = []
+}) {
   const lines = ['## Collaboration progress (report only)', '',
     `مخزن: \`${repository}\``,
     `زمان: ${generatedAt}`,
@@ -48,12 +96,41 @@ export function renderProgress({ repository, counts, merged, closedUnmerged, tie
   }
   lines.push('', `آستانه‌های گزارش‌شدهٔ جامعه: ${tiers.join(', ')}.`,
     '',
-    'Pair Extraordinaire در این گزارش شمارش نمی‌شود؛ به trailer معتبر `Co-authored-by` و merge به شاخهٔ پیش‌فرض وابسته است. Galaxy Brain به پاسخ پذیرفته‌شده در Discussions Q&A وابسته است و اینجا ساخته نمی‌شود.');
+    '### Pair Extraordinaire (گزارش جامعه؛ غیررسمی)',
+    '',
+    'فقط قالب `Co-authored-by` روی commitهای PRهای **mergeشده** شمرده می‌شود. GitHub باید ایمیل را به حساب وصل کند، PR را به شاخهٔ پیش‌فرض ادغام کند، و Achievement را پردازش کند؛ هیچ‌کدام اینجا تأیید نمی‌شود.',
+    'دو حساب یک مالک دارند؛ این شمارش همکاری دو انسان مستقل نیست. `github-actions[bot]` نشان نمی‌دهد.',
+    '',
+    `Commitهای pair (trailer همکار خوش‌فرم): ${pair.pairCommits} — PRهای mergeشدهٔ حاوی آن‌ها: ${pair.pairPulls} — trailer نامعتبر نادیده‌گرفته‌شده: ${pair.malformedTrailers}`,
+    '',
+    '| حساب | commitهایی که co-author noreply او هستند | آستانهٔ رسیده‌شده | تا آستانهٔ بعدی |',
+    '| --- | ---: | ---: | ---: |');
+  for (const [login, count] of Object.entries(pair.counts)) {
+    const tier = communityTier(count, pairTiers);
+    lines.push(`| @${login} | ${count} | ${tier.reached ?? '—'} | ${tier.next == null ? 'نامشخص' : tier.remaining} |`);
+  }
+  lines.push('', `آستانه‌های گزارش‌شدهٔ جامعه برای pair: ${pairTiers.join(', ') || '—'}.`,
+    '',
+    'Galaxy Brain به پاسخ پذیرفته‌شده در Discussions Q&A وابسته است و اینجا ساخته نمی‌شود.');
   return lines.join('\n') + '\n';
 }
 
 export async function collectMergedPulls(api, repo) {
   return listAll(api, `/repos/${repo}/pulls?state=closed`);
+}
+
+export async function collectPairPullCommits(api, repo, pulls) {
+  if (typeof repo !== 'string' || !/^[\w.-]+\/[\w.-]+$/.test(repo)) {
+    throw new Error('A repository of the form owner/name is required.');
+  }
+  const merged = (pulls ?? []).filter(pull => pull.merged_at).sort((a, b) => a.number - b.number);
+  const result = [];
+  for (const pull of merged) {
+    if (!Number.isInteger(pull.number) || pull.number < 1) throw new Error('Invalid pull number');
+    const commits = mapPullCommits(await listAll(api, `/repos/${repo}/pulls/${pull.number}/commits`));
+    result.push({ number: pull.number, commits });
+  }
+  return result;
 }
 
 async function main() {
@@ -63,12 +140,16 @@ async function main() {
   const config = JSON.parse(await readFile(new URL('../config/collaboration.json', import.meta.url), 'utf8'));
   const achievements = JSON.parse(await readFile(new URL('../config/achievements.json', import.meta.url), 'utf8'));
   if (repo !== config.repository) throw new Error('This workflow is restricted to its configured repository.');
-  const pulls = await collectMergedPulls(createApi(token), repo);
+  const api = createApi(token);
+  const pulls = await collectMergedPulls(api, repo);
   const stats = mergedPullCounts(pulls, config.participants);
+  const pair = pairPathStats(await collectPairPullCommits(api, repo, pulls), config.participants);
   const report = renderProgress({
     repository: repo,
     ...stats,
+    pair,
     tiers: achievements.pullShark.tiers,
+    pairTiers: achievements.pairExtraordinaire.tiers,
     generatedAt: new Date().toISOString()
   });
   console.log(report);

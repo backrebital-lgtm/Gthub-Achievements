@@ -7,7 +7,8 @@ const SECRET_RE = /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b|\bgithub_pat_[A-
 const REQUIRED = [
   'README.md', 'CONTRIBUTING.md', 'LICENSE', 'SECURITY.md', 'CHANGELOG.md',
   'config/collaboration.json', 'docs/setup.fa.md', 'docs/collaboration.fa.md',
-  'docs/achievements.fa.md', 'docs/examples/branch-pr.fa.md', 'docs/examples/attribution.fa.md'
+  'docs/achievements.fa.md', 'docs/examples/branch-pr.fa.md', 'docs/examples/attribution.fa.md',
+  'docs/examples/pair-extraordinaire.fa.md'
 ];
 
 export async function walk(dir) {

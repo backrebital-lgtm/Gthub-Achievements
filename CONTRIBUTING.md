@@ -10,6 +10,6 @@
 
 دو حساب متعلق به یک نفر، دو بازبینی‌کنندهٔ مستقل نیستند. تنها زمانی co-author ثبت کنید که نویسندهٔ دیگر واقعاً در آن commit همکاری کرده باشد. ایمیل co-author باید به حساب GitHub او وصل باشد؛ قالب رسمی `Co-authored-by: NAME <EMAIL>` است. ایمیل noreply برای حفظ حریم خصوصی مناسب است. جزئیات انتساب: [انتساب و Discussions](docs/examples/attribution.fa.md). گردش‌کار `Validate co-authors` قالب را از API همان PR و با کد شاخهٔ پیش‌فرض بررسی می‌کند. با باز شدن PR، از عضو دیگر بررسی خواسته می‌شود؛ روزبه‌روز: [گردش‌کارهای دو حساب](docs/workflows.fa.md).
 
-نقش پیشنهادی ramincsy: مثال‌ها و پیاده‌سازی. نقش پیشنهادی backrebital-lgtm: بررسی اجرای مثال‌ها و اصلاح مستندات. این نقش‌ها صرفاً تقسیم کار هستند، نه دستور تأیید خودکار.
+نقش پیشنهادی ramincsy: مثال‌ها و پیاده‌سازی. نقش پیشنهادی backrebital-lgtm: بررسی اجرای مثال‌ها و اصلاح مستندات. این نقش‌ها صرفاً تقسیم کار هستند، نه دستور تأیید خودکار. مسیر عملی trailer: [Pair Extraordinaire](docs/examples/pair-extraordinaire.fa.md).
 
 برچسب‌ها: `ready-for-work` برای ورود به صف، `blocked` برای توقف واگذاری، `priority:high` / `priority:normal` برای ترتیب، `area:docs` / `area:automation` / `area:tests` برای موضوع.

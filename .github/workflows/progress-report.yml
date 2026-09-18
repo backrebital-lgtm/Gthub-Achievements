@@ -27,7 +27,7 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '22'
-      - name: Count merged pull requests
+      - name: Count merged pulls and pair-path trailers
         run: node scripts/progress.mjs
         env:
           GH_TOKEN: ${{ github.token }}

@@ -12,7 +12,7 @@ GitHub commit را به کاربری پیوند می‌دهد که **ایمیل 
 2. اگر «Keep my email addresses private» روشن است، نشانی `noreply` همان صفحه را برای `user.email` استفاده کنید. شکل رایج:
    - `ID+USERNAME@users.noreply.github.com`
    - یا در حساب‌های قدیمی‌تر: `USERNAME@users.noreply.github.com`
-3. `ID` را حدس نزنید؛ همان مقداری را بگذارید که GitHub در تنظیمات ایمیل نشان می‌دهد.
+3. `ID` را حدس نزنید. شناسهٔ عددی عمومی را با `gh api users/LOGIN --jq .id` بخوانید، سپس با noreply نمایش‌داده‌شده در Settings مقایسه کنید. مثال عملی با مقادیر تأییدشدهٔ همین دو حساب: [Pair Extraordinaire و noreply](pair-extraordinaire.fa.md).
 4. ایمیل را در commit، log یا Issueهای عمومی اگر لازم نیست تکرار نکنید؛ شکل noreply برای همین است.
 
 بررسی محلی هویت نویسنده (بدون هل دادن):
@@ -34,7 +34,7 @@ Trailer فقط وقتی اضافه شود که نفر دیگر **در همان c
 ```
 docs: explain how co-author trailers are attributed
 
-Co-authored-by: backrebital-lgtm <ID+backrebital-lgtm@users.noreply.github.com>
+Co-authored-by: backrebital-lgtm <329678572+backrebital-lgtm@users.noreply.github.com>
 ```
 <!-- /sample:co-author -->
 
@@ -46,13 +46,13 @@ Co-authored-by: backrebital-lgtm <ID+backrebital-lgtm@users.noreply.github.com>
 - چند همکار = چند خط `Co-authored-by`.
 - squash merge پیام نهایی را بازنویسی می‌کند؛ اگر trailer لازم است باید در پیام squash/merge باقی بماند.
 
-نمونهٔ ثبت محلی پس از ویرایش واقعی مشترک (ایمیل را از Settings جایگزین کنید):
+نمونهٔ ثبت محلی پس از ویرایش واقعی مشترک (اگر Settings نشانی دیگری نشان داد، همان را بگذارید):
 
 ```sh
 git commit -m "$(cat <<'EOF'
 docs: explain how co-author trailers are attributed
 
-Co-authored-by: backrebital-lgtm <ID+backrebital-lgtm@users.noreply.github.com>
+Co-authored-by: backrebital-lgtm <329678572+backrebital-lgtm@users.noreply.github.com>
 EOF
 )"
 ```
