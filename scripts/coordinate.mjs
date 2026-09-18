@@ -2,7 +2,7 @@ import { appendFile, readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { createApi, listAll, listBlockedBy } from './github.mjs';
 import { validateConfig } from './config.mjs';
-import { planAssignments, reviewerFor, reviewState, assignmentCandidates, openBlockers } from './planner.mjs';
+import { planAssignments, reviewerFor, reviewState, assignmentCandidates, openBlockers, issueNextAction, pullNextAction } from './planner.mjs';
 
 export const MARKER = '<!-- gthub-achievements:coordination:v1 -->';
 const isReport = issue => issue.user?.login === 'github-actions[bot]' && issue.body?.includes(MARKER);
@@ -14,6 +14,7 @@ export function pullsToInspect(pulls, maxPullsPerRun = pulls.length) {
 }
 
 export function render(issues, pulls, details = {}) {
+  const config = details.participants ? details : details.config;
   const tasks = issues.filter(i => !i.pull_request && !isReport(i));
   const lines = [MARKER, '# وضعیت همکاری', '',
     'گزارش خودکار؛ این متن review یا تأیید انسانی نیست.', '',
@@ -21,6 +22,7 @@ export function render(issues, pulls, details = {}) {
     '## PRهای باز', ''];
   for (const pr of [...pulls].sort((a, b) => a.number - b.number)) {
     lines.push(`- #${pr.number} — نویسنده: @${pr.user.login} — ${pr.draft ? 'پیش‌نویس' : pr.reviewStatus ?? 'نیازمند بررسی'} — commit: \`${pr.head.sha}\``);
+    if (config) lines.push(`  - اقدام بعدی: ${pullNextAction(pr, config.participants)}`);
   }
   if (!pulls.length) lines.push('PR بازی وجود ندارد.');
   if (details.omittedPulls) {
@@ -32,6 +34,7 @@ export function render(issues, pulls, details = {}) {
     lines.push(`- #${item.number} — ${assignees || 'بدون مسئول'} — آخرین تغییر: ${item.updated_at}`);
     const blockers = openBlockers(item.blockedBy).map(b => `#${b.number}`).join('، ');
     if (blockers) lines.push(`  - وابسته به ${blockers} (باز)؛ تا بسته شدن مانع واگذار نمی‌شود`);
+    if (config) lines.push(`  - اقدام بعدی: ${issueNextAction(item, config)}`);
   }
   if (!tasks.length) lines.push('کار بازی وجود ندارد.');
   if (details.omittedDependencies) {
@@ -118,7 +121,8 @@ export async function coordinate(api, repo, summaryPath, options = {}) {
   const report = render(issues, pulls, {
     omittedPulls,
     omittedDependencies,
-    maxPullsPerRun: config?.maxPullsPerRun
+    maxPullsPerRun: config?.maxPullsPerRun,
+    config
   });
   if (summaryPath) await appendFile(summaryPath, report.body + '\n\n## Run result\n\n' +
     `Fetched ${issues.length} open issues (${issues.pagesFetched ?? 1} page) and ${pulls.length} open pulls (${pulls.pagesFetched ?? 1} page).\n\n` +

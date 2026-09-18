@@ -37,6 +37,25 @@ export function assignmentCandidates(issues, config) {
     .sort((a, b) => priority(a) - priority(b) || a.number - b.number);
 }
 
+export function issueNextAction(issue, config) {
+  if (hasLabel(issue, config.blockedLabel) || openBlockers(issue.blockedBy).length) {
+    return 'رفع مانع و ثبت نتیجه در همین Issue؛ کار جدید شروع نشود';
+  }
+  if (!hasLabel(issue, config.readyLabel)) return 'روشن‌کردن مسئله و معیار پایان پیش از آماده‌سازی';
+  if (!(issue.assignees ?? []).length) return 'انتظار برای ظرفیت واگذاری؛ مسئول تازه بدون بررسی ظرفیت تعیین نشود';
+  return 'اجرای معیار پایان، ثبت شواهد آزمون و تحویل PR مرتبط به حساب مقابل';
+}
+
+export function pullNextAction(pull, participants) {
+  const author = pull.user.login;
+  const peer = participants.includes(author) ? participants.find(p => p !== author) : null;
+  if (pull.draft) return `@${author}: تکمیل تغییر و آزمون‌ها پیش از درخواست بررسی`;
+  if (pull.reviewStatus === 'changes-requested') return `@${author}: رفع درخواست اصلاح و ثبت پاسخ مستند؛ سپس بررسی دوبارهٔ commit تازه`;
+  if (pull.reviewStatus === 'approved-current-commit') return 'بررسی CI آخرین head، ایرادهای حل‌نشده و قوانین شاخه؛ تأیید review به‌تنهایی مجوز ادغام نیست';
+  if (!pull.reviewStatus) return 'وضعیت review هنوز خوانده نشده؛ پیش از هر تصمیم بررسی شود';
+  return `${peer ? `@${peer}` : 'بازبین مجاز'}: بررسی diff واقعی و ثبت نتیجه برای همین commit؛ نه تأیید خودکار بدون بررسی`;
+}
+
 export function planAssignments(issues, config, blockersByNumber) {
   const load = new Map(config.participants.map(p => [p, 0]));
   for (const issue of issues.filter(i => !i.pull_request && i.state !== 'closed')) for (const assignee of issue.assignees ?? []) {
