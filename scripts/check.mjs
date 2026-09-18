@@ -1,7 +1,16 @@
 import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { validateConfig } from './config.mjs';
 
-async function walk(dir) {
+const SECRET_RE = /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b|\bgithub_pat_[A-Za-z0-9_]{20,}\b/;
+const REQUIRED = [
+  'README.md', 'CONTRIBUTING.md', 'LICENSE', 'SECURITY.md', 'CHANGELOG.md',
+  'config/collaboration.json', 'docs/setup.fa.md', 'docs/collaboration.fa.md',
+  'docs/achievements.fa.md', 'docs/examples/branch-pr.fa.md', 'docs/examples/attribution.fa.md'
+];
+
+export async function walk(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
   const files = [];
   for (const entry of entries) {
@@ -13,23 +22,56 @@ async function walk(dir) {
   return files;
 }
 
-const errors = [];
-for (const file of await walk('.')) {
-  if (!/\.(md|json)$/.test(file)) continue;
-  const text = await readFile(file, 'utf8');
-  if (!text.trim()) errors.push(`${file}: empty file`);
-  if (file.endsWith('.json')) {
-    try { JSON.parse(text); } catch { errors.push(`${file}: invalid JSON`); }
-  } else {
-    for (const match of text.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)) {
-      const link = match[1];
-      if (/^(https?:|mailto:|#)/.test(link)) continue;
-      const target = path.resolve(path.dirname(file), link.split('#')[0]);
-      try { await stat(target); } catch { errors.push(`${file}: missing link ${link}`); }
+export async function checkRepo(root = '.') {
+  const errors = [];
+  for (const rel of REQUIRED) {
+    try { await stat(path.join(root, rel)); } catch { errors.push(`missing required file: ${rel}`); }
+  }
+  try {
+    const config = validateConfig(JSON.parse(await readFile(path.join(root, 'config/collaboration.json'), 'utf8')));
+    if (config.repository !== 'ramincsy/Gthub-Achievements') errors.push('config repository must stay ramincsy/Gthub-Achievements');
+    if (config.participants[0] !== 'ramincsy' || config.participants[1] !== 'backrebital-lgtm') {
+      errors.push('config participants must stay ramincsy and backrebital-lgtm');
+    }
+  } catch (error) {
+    errors.push(`config/collaboration.json: ${error.message}`);
+  }
+  for (const file of await walk(root)) {
+    if (!/\.(md|json|yml|yaml|mjs)$/.test(file)) continue;
+    const text = await readFile(file, 'utf8');
+    if (!text.trim()) errors.push(`${file}: empty file`);
+    if (SECRET_RE.test(text)) errors.push(`${file}: looks like a GitHub token; remove it`);
+    if (file.endsWith('.json')) {
+      try { JSON.parse(text); } catch { errors.push(`${file}: invalid JSON`); }
+    }
+    if (/\.md$/.test(file)) {
+      for (const match of text.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)) {
+        const link = match[1];
+        if (/^(https?:|mailto:|#)/.test(link)) continue;
+        const target = path.resolve(path.dirname(file), link.split('#')[0]);
+        try { await stat(target); } catch { errors.push(`${file}: missing link ${link}`); }
+      }
+    }
+    if (/(^|[/\\])workflows[/\\].+\.ya?ml$/.test(file)) {
+      if (/secrets\./.test(text)) errors.push(`${file}: workflows must not read repository secrets`);
+      for (const action of text.matchAll(/uses:\s*(\S+)/g)) {
+        if (!/@[a-f0-9]{40}$/.test(action[1])) errors.push(`${file}: unpinned action ${action[1]}`);
+      }
+      if (!/node-version:\s*'22'/.test(text)) errors.push(`${file}: expected Node.js 22`);
+      if (!/persist-credentials:\s*false/.test(text)) errors.push(`${file}: persist-credentials must be false`);
     }
   }
+  return errors;
 }
-if (errors.length) {
-  console.error(errors.join('\n'));
-  process.exitCode = 1;
-} else console.log('JSON and local documentation links are valid.');
+
+async function main() {
+  const errors = await checkRepo('.');
+  if (errors.length) {
+    console.error(errors.join('\n'));
+    process.exitCode = 1;
+  } else console.log('JSON, workflows and local documentation links are valid.');
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  await main();
+}

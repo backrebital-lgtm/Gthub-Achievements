@@ -16,3 +16,23 @@ body:
       description: با چه بررسی‌ای می‌فهمیم کار تمام شده است؟
     validations:
       required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: حوزه
+      description: موضوع کار برای برچسب‌گذاری دستی نگهدارنده.
+      options:
+        - area:docs
+        - area:automation
+        - area:tests
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: اولویت پیشنهادی
+      options:
+        - priority:normal
+        - priority:high
+    validations:
+      required: true

@@ -1,15 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { coordinate, render, MARKER } from '../scripts/coordinate.mjs';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { coordinate, render, MARKER, pullsToInspect } from '../scripts/coordinate.mjs';
+import { pageSlice } from '../scripts/github.mjs';
 
 const task = { number: 1, body: 'Useful example', assignees: [], updated_at: '2026-09-15T00:00:00Z' };
 function mock(issues, pulls = []) {
   const writes = [];
   return { writes, api: async (route, options) => {
     if (options) { writes.push({ route, ...options }); return {}; }
-    if (route.includes('/issues?')) return issues;
-    if (route.includes('/pulls?')) return pulls;
-    throw new Error('Unexpected route');
+    if (route.includes('/reviews')) return pageSlice([], route);
+    if (route.includes('/issues?')) return pageSlice(issues, route);
+    if (route.includes('/pulls?')) return pageSlice(pulls, route);
+    throw new Error(`Unexpected route ${route}`);
   } };
 }
 test('empty backlog produces no public issue', async () => {
@@ -67,7 +72,7 @@ test('a concurrent manual assignment is not overwritten', async () => {
 test('a changed PR head prevents a request based on stale data', async () => {
   const pr = { number: 2, user: { login: 'a' }, head: { sha: 'old' }, requested_reviewers: [], state: 'open' };
   const m = mock([], [pr]);
-  const api = (route, options) => route.includes('/reviews?') ? Promise.resolve([])
+  const api = (route, options) => route.includes('/reviews') ? Promise.resolve([])
     : route.endsWith('/pulls/2') ? Promise.resolve({ ...pr, head: { sha: 'new' } }) : m.api(route, options);
   await coordinate(api, 'owner/repo', undefined, { config });
   assert.ok(m.writes.every(write => !write.route.endsWith('/requested_reviewers')));
@@ -77,7 +82,7 @@ test('review submitted concurrently prevents a duplicate request', async () => {
   const pr = { number: 2, user: { login: 'a' }, head: { sha: 'new' }, requested_reviewers: [], state: 'open' };
   const m = mock([], [pr]);
   let reads = 0;
-  const api = (route, options) => route.includes('/reviews?') ? Promise.resolve(++reads === 1 ? [] :
+  const api = (route, options) => route.includes('/reviews') ? Promise.resolve(++reads === 1 ? [] :
     [{ id: 1, state: 'APPROVED', commit_id: 'new', user: { login: 'b' } }])
     : route.endsWith('/pulls/2') ? Promise.resolve(pr) : m.api(route, options);
   await coordinate(api, 'owner/repo', undefined, { config });
@@ -102,7 +107,7 @@ test('assignment and review writes are bounded and successful reruns are quiet',
   const writes = [];
   const api = async (route, options) => {
     if (!options) {
-      if (route.includes('/issues?')) return structuredClone(issues);
+      if (route.includes('/issues?')) return pageSlice(issues, route);
       if (route.includes('/pulls?')) return [];
       const number = Number(route.split('/').at(-1));
       return structuredClone(issues.find(i => i.number === number));
@@ -126,4 +131,51 @@ test('assignment and review writes are bounded and successful reruns are quiet',
   writes.length = 0;
   assert.equal(await coordinate(api, 'owner/repo', undefined, { config }), 'unchanged');
   assert.equal(writes.length, 0);
+});
+
+test('paginated issue lists appear in full in the public report and step summary', async () => {
+  const issues = Array.from({ length: 101 }, (_, i) => ({ ...task, number: i + 1, updated_at: '2026-09-18T00:00:00Z' }));
+  const pages = [];
+  const pulls = [];
+  const api = async (route, options) => {
+    if (options) return {};
+    pages.push(route);
+    if (route.includes('/issues?')) return pageSlice(issues, route);
+    if (route.includes('/pulls?')) return pageSlice(pulls, route);
+    throw new Error(route);
+  };
+  const dir = await mkdtemp(path.join(tmpdir(), 'coord-'));
+  const summary = path.join(dir, 'summary.md');
+  await writeFile(summary, '');
+  try {
+    assert.equal(await coordinate(api, 'owner/repo', summary), 'created');
+    const text = await readFile(summary, 'utf8');
+    assert.match(text, /#1 /);
+    assert.match(text, /#101 /);
+    assert.match(text, /Fetched 101 open issues \(2 page\) and 0 open pulls \(1 page\)/);
+    assert.equal(pages.filter(r => /issues\?/.test(r) && /page=2/.test(r)).length, 1);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('review inspection is number-ordered and leftover pulls are disclosed', async () => {
+  const pulls = [30, 2, 11].map(number => ({ number, user: { login: 'a' }, draft: false, head: { sha: `sha${number}` }, requested_reviewers: [], state: 'open' }));
+  assert.deepEqual(pullsToInspect(pulls, 2).inspectable.map(p => p.number), [2, 11]);
+  const m = mock([], pulls);
+  const dir = await mkdtemp(path.join(tmpdir(), 'coord-'));
+  const summary = path.join(dir, 'summary.md');
+  await writeFile(summary, '');
+  try {
+    await coordinate(m.api, 'owner/repo', summary, { config: { ...config, maxPullsPerRun: 2, maxMutationsPerRun: 10 }, dryRun: true });
+    const text = await readFile(summary, 'utf8');
+    assert.match(text, /سقف 2 مورد/);
+    assert.match(text, /1 pull\(s\) were not inspected/);
+    assert.match(text, /Would request @b to review #2/);
+    assert.match(text, /Would request @b to review #11/);
+    assert.doesNotMatch(text, /review #30/);
+    assert.match(text, /#30 — نویسنده: @a — نیازمند بررسی/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });

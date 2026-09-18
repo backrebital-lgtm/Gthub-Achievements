@@ -19,6 +19,8 @@ Mars 2020 و Arctic Code Vault به رویدادهای تاریخی مرتبط�
 
 ## شواهد
 
+جزئیات عملی انتساب و Q&A: [عیب‌یابی co-author و Discussions](examples/attribution.fa.md).
+
 - [مرجع رسمی پروفایل](https://docs.github.com/en/account-and-profile/reference/profile-reference)
 - [پژوهش تجربی دربارهٔ نشان‌ها، ۲۰۲۴](https://ricerca.uniba.it/bitstream/11586/502580/2/1-s2.0-S0950584924001666-main.pdf) — شواهد تاریخی دربارهٔ شرایط شناخته‌شده، نه تضمین رفتار فعلی.
 - [نویسندگی مشترک](https://docs.github.com/en/pull-requests/how-tos/commit-changes/creating-a-commit-with-multiple-authors)

@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: روال همکاری
+    url: https://github.com/ramincsy/Gthub-Achievements/blob/main/docs/collaboration.fa.md
+    about: صف کار، برچسب‌ها، بررسی PR و dry_run
+  - name: مثال branch و PR
+    url: https://github.com/ramincsy/Gthub-Achievements/blob/main/docs/examples/branch-pr.fa.md
+    about: ساخت شاخه، تفاوت close و merge
+  - name: انتساب commit و Discussions
+    url: https://github.com/ramincsy/Gthub-Achievements/blob/main/docs/examples/attribution.fa.md
+    about: co-author، ایمیل noreply و Q&A واقعی

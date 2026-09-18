@@ -1,11 +1,19 @@
 import { appendFile, readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { createApi, listAll } from './github.mjs';
+import { validateConfig } from './config.mjs';
 import { planAssignments, reviewerFor, reviewState } from './planner.mjs';
 
 export const MARKER = '<!-- gthub-achievements:coordination:v1 -->';
 const isReport = issue => issue.user?.login === 'github-actions[bot]' && issue.body?.includes(MARKER);
-export function render(issues, pulls) {
+
+export function pullsToInspect(pulls, maxPullsPerRun = pulls.length) {
+  const ordered = [...pulls].sort((a, b) => a.number - b.number);
+  const limit = Number.isInteger(maxPullsPerRun) ? maxPullsPerRun : ordered.length;
+  return { inspectable: ordered.slice(0, limit), omitted: Math.max(0, ordered.length - limit) };
+}
+
+export function render(issues, pulls, details = {}) {
   const tasks = issues.filter(i => !i.pull_request && !isReport(i));
   const lines = [MARKER, '# وضعیت همکاری', '',
     'گزارش خودکار؛ این متن review یا تأیید انسانی نیست.', '',
@@ -15,6 +23,9 @@ export function render(issues, pulls) {
     lines.push(`- #${pr.number} — نویسنده: @${pr.user.login} — ${pr.draft ? 'پیش‌نویس' : pr.reviewStatus ?? 'نیازمند بررسی'} — commit: \`${pr.head.sha}\``);
   }
   if (!pulls.length) lines.push('PR بازی وجود ندارد.');
+  if (details.omittedPulls) {
+    lines.push(`توجه: ${details.omittedPulls} PR به‌خاطر سقف ${details.maxPullsPerRun} مورد در این اجرا به‌تفصیل بررسی نشد و وضعیت آن‌ها «نیازمند بررسی» مانده است.`);
+  }
   lines.push('', '## کارهای باز', '');
   for (const item of [...tasks].sort((a, b) => a.number - b.number)) {
     const assignees = (item.assignees ?? []).map(a => `@${a.login}`).sort().join(', ');
@@ -32,6 +43,7 @@ export async function coordinate(api, repo, summaryPath, options = {}) {
   const existing = issues.find(isReport);
   const plans = [];
   let mutations = 0;
+  let omittedPulls = 0;
   if (config) {
     for (const action of planAssignments(issues.filter(i => !isReport(i)), config)) {
       if (mutations >= config.maxMutationsPerRun) break;
@@ -56,9 +68,11 @@ export async function coordinate(api, repo, summaryPath, options = {}) {
       mutations++;
       plans.push(`Assigned #${action.number} to @${action.assignee}`);
       const index = issues.findIndex(i => i.number === action.number);
-      issues[index] = updated;
+      if (index >= 0) issues[index] = updated;
     }
-    for (const pull of pulls.slice(0, config.maxPullsPerRun)) {
+    const { inspectable, omitted } = pullsToInspect(pulls, config.maxPullsPerRun);
+    omittedPulls = omitted;
+    for (const pull of inspectable) {
       const reviews = await listAll(api, `/repos/${repo}/pulls/${pull.number}/reviews`);
       pull.reviewStatus = reviewState(pull, reviews);
       const reviewer = reviewerFor(pull, reviews, config.participants);
@@ -82,8 +96,10 @@ export async function coordinate(api, repo, summaryPath, options = {}) {
       pull.reviewStatus = reviewState({ ...fresh, requested_reviewers: [{ login: reviewer }] }, freshReviews);
     }
   }
-  const report = render(issues, pulls);
+  const report = render(issues, pulls, { omittedPulls, maxPullsPerRun: config?.maxPullsPerRun });
   if (summaryPath) await appendFile(summaryPath, report.body + '\n\n## Run result\n\n' +
+    `Fetched ${issues.length} open issues (${issues.pagesFetched ?? 1} page) and ${pulls.length} open pulls (${pulls.pagesFetched ?? 1} page).\n\n` +
+    (omittedPulls ? `${omittedPulls} pull(s) were not inspected in detail because of maxPullsPerRun=${config.maxPullsPerRun}.\n\n` : '') +
     (dryRun ? 'Dry run; no writes.' : `${mutations} assignment/review writes completed.`) + '\n\n' +
     (plans.length ? plans.map(p => `- ${p}`).join('\n') : 'No assignment or review action needed.') + '\n');
   if (dryRun) return 'dry-run';
@@ -102,12 +118,8 @@ async function main() {
   const repo = process.env.GITHUB_REPOSITORY;
   const token = process.env.GH_TOKEN;
   if (!repo || !token || !/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('Repository and token are required.');
-  const config = JSON.parse(await readFile(new URL('../config/collaboration.json', import.meta.url), 'utf8'));
+  const config = validateConfig(JSON.parse(await readFile(new URL('../config/collaboration.json', import.meta.url), 'utf8')));
   if (repo !== config.repository) throw new Error('This workflow is restricted to its configured repository.');
-  if (!Array.isArray(config.participants) || config.participants.length !== 2 || new Set(config.participants).size !== 2 || !config.participants.every(p => /^[A-Za-z0-9-]+$/.test(p))) throw new Error('Two distinct GitHub participants are required.');
-  for (const field of ['maxAssignedPerPerson', 'maxPullsPerRun', 'maxMutationsPerRun']) {
-    if (!Number.isInteger(config[field]) || config[field] < 1 || config[field] > 100) throw new Error(`Invalid limit: ${field}`);
-  }
   console.log(await coordinate(createApi(token), repo, process.env.GITHUB_STEP_SUMMARY, { config, dryRun: process.env.DRY_RUN === 'true' }));
 }
 

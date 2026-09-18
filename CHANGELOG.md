@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0
+
+- Practical Persian branch/PR tutorial with a locally tested merge-versus-close example.
+- Attribution troubleshooting for noreply emails, real co-author trailers and honest Q&A Discussions.
+- Coordinator inspects pull requests in number order, records API page counts and states when the per-run review cap skipped remaining pulls.
+- GitHub writes are limited to issue assignment, review requests and the coordination issue; repository checks reject tokens and unpinned Actions.
+- MIT license, security policy, issue contact links and pinned Actions `checkout@v7.0.1` / `setup-node@v7.0.0`.
+
 ## 0.2.0
 
 - Balanced assignment for explicitly ready work, with two active tasks per person.
