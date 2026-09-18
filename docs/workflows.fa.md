@@ -44,6 +44,15 @@
 
 این مخزن Discussions دارد. قالب دستهٔ Q&A با slug `q-a` در `.github/DISCUSSION_TEMPLATE/q-a.yml` است. فعال‌سازی اولیهٔ Discussions از فایل مخزن ممکن نیست؛ اگر دسته نباشد، در Settings آن را بسازید. پرسش نمایشی برای نشان نفرستید.
 
+## Quickdraw و YOLO
+
+گردش‌کارها Issue/PR را برای ساختن رویداد زمانی نمی‌بندند و approve/merge نمی‌کنند.
+
+- **Quickdraw:** بستن ظرف حدود ۵ دقیقه پس از باز شدن هدف نیست و خودکارسازی نمی‌شود.
+- **YOLO:** merge بدون بررسی هدف نیست؛ پس از اصلاحات، بررسی همان commit را بگیرید.
+
+قالب trailer را می‌توانید پیش از push با `npm run coauthor` از `git log` محلی بسنجید. آن دستور توکن ندارد. گردش‌کار `Validate co-authors` همچنان از API PR و کد شاخهٔ پیش‌فرض استفاده می‌کند.
+
 ## توقف
 
 از Actions هر گردش‌کار را Disable کنید. هماهنگی ساعتی و گزارش پیشرفت جدا از وظیفهٔ محلی Codex هستند. جزئیات دسترسی: [setup.fa.md](setup.fa.md). محدودیت نشان‌ها: [achievements.fa.md](achievements.fa.md).

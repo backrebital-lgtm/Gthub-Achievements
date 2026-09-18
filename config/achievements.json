@@ -21,5 +21,17 @@
     "source": "community",
     "event": "repository-stars",
     "tiers": [16]
+  },
+  "quickdraw": {
+    "source": "community",
+    "event": "close-issue-or-pull-within-about-five-minutes",
+    "automated": false,
+    "notes": "Not a project goal. Do not close issues or pull requests immediately for a badge."
+  },
+  "yolo": {
+    "source": "community",
+    "event": "merge-without-review",
+    "automated": false,
+    "notes": "This project requests review. Workflows never approve or merge."
   }
 }

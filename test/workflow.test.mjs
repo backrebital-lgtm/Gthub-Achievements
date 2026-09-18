@@ -29,7 +29,11 @@ test('CI is read-only, unprivileged and pinned', async () => {
   assert.doesNotMatch(source, /pull_request_target:/);
   assert.match(source, /permissions:\s*contents: read/);
   assert.match(source, /persist-credentials: false/);
-  assert.doesNotMatch(source, /secrets\./);
+  assert.match(source, /fetch-depth:\s*0/);
+  assert.match(source, /npm test/);
+  assert.match(source, /npm run check/);
+  assert.match(source, /npm run coauthor/);
+  assert.doesNotMatch(source, /GH_TOKEN|secrets\./);
   assertPinned(source);
 });
 

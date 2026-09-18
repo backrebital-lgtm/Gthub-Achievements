@@ -18,7 +18,10 @@
 ```sh
 npm test
 npm run check
+npm run coauthor
 ```
+
+`npm run coauthor` قالب trailerهای `Co-authored-by` را از `git log` همین شاخه می‌خواند و به توکن GitHub نیاز ندارد. commit بدون trailer برای کار تکی مجاز است.
 
 ## همکاری ساعتی
 

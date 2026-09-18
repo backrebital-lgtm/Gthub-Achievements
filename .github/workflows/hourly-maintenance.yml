@@ -50,9 +50,9 @@ jobs:
         with:
           node-version: '22'
       - name: Run tests
-        run: node --test
+        run: npm test
       - name: Check docs, config and workflows
-        run: node scripts/check.mjs
+        run: npm run check
       - name: Update work summary when state changes
         run: node scripts/coordinate.mjs
         env:

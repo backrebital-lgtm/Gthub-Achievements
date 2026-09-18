@@ -4,7 +4,7 @@
 
 1. Issue موجود را انتخاب کنید یا مسئلهٔ مشخصی را توضیح دهید.
 2. شاخه بسازید و تغییر را با حسابی که کار را انجام داده ثبت کنید. مسیر عملی: [مثال branch و PR](docs/examples/branch-pr.fa.md).
-3. `npm test` و `npm run check` را اجرا کنید.
+3. `npm test`، `npm run check` و `npm run coauthor` را اجرا کنید. مورد آخر قالب `Co-authored-by` را از `git log` محلی می‌سنجد و توکن نمی‌خواهد.
 4. PR با توضیح تغییر و نتیجهٔ بررسی‌ها باز کنید. Merge تغییرات را روی `main` می‌نشاند؛ close بدون merge این کار را نمی‌کند.
 5. بازبینی‌کننده نتیجهٔ بررسی واقعی خود را ثبت کند؛ merge پس از بررسی تغییر انجام شود.
 
@@ -13,3 +13,17 @@
 نقش پیشنهادی ramincsy: مثال‌ها و پیاده‌سازی. نقش پیشنهادی backrebital-lgtm: بررسی اجرای مثال‌ها و اصلاح مستندات. این نقش‌ها صرفاً تقسیم کار هستند، نه دستور تأیید خودکار. مسیر عملی trailer: [Pair Extraordinaire](docs/examples/pair-extraordinaire.fa.md).
 
 برچسب‌ها: `ready-for-work` برای ورود به صف، `blocked` برای توقف واگذاری، `priority:high` / `priority:normal` برای ترتیب، `area:docs` / `area:automation` / `area:tests` برای موضوع.
+
+## چک‌لیست دو حساب
+
+قبل از باز کردن PR غیرپیش‌نویس:
+
+1. مسئله مشخص است و این PR همان کار را حل می‌کند؛ PR باز موازی را تکرار نکنید.
+2. `npm test`، `npm run check` و `npm run coauthor` روی آخرین commit موفق‌اند.
+3. `Co-authored-by` فقط برای همکاری واقعی در همان commit است. قالب: `Co-authored-by: NAME <ID+login@users.noreply.github.com>`. شناسه را با `gh api users/LOGIN --jq .id` بخوانید و با **Settings → Emails** همان حساب مقایسه کنید.
+4. دو حساب [ramincsy](https://github.com/ramincsy) و [backrebital-lgtm](https://github.com/backrebital-lgtm) **یک مالک** دارند. درخواست بررسی بین آن‌ها دو reviewer مستقل نمی‌سازد.
+5. گردش‌کار `Request peer review` فقط وقتی نویسندهٔ GitHub برابر ramincsy یا backrebital-lgtm باشد اجرا می‌شود. اگر نویسنده `cursor[bot]` یا هویت دیگری است، بررسی را دستی از عضو دیگر بخواهید.
+6. **Quickdraw هدف این پروژه نیست.** Issue یا PR را ظرف حدود ۵ دقیقه پس از باز شدن نبندید تا رویداد نشان ساخته شود. بستن فقط وقتی کار منسوخ یا تکراری است.
+7. **YOLO هدف این پروژه نیست.** بدون بررسی واقعی merge نکنید. گردش‌کارها approve یا merge نمی‌کنند.
+
+این چک‌لیست جایگزین بررسی انسانی نیست و Achievement را تضمین نمی‌کند.
