@@ -37,7 +37,9 @@ Co-authored-by: backrebital-lgtm <329678572+backrebital-lgtm@users.noreply.githu
 ```
 <!-- /sample:both-coauthors -->
 
-قواعد همان [انتساب commit](attribution.fa.md) است: یک خط خالی پیش از trailerها، املای `Co-authored-by:`، و بدون دامنهٔ نمونه (`example.com`). squash merge باید trailer را در پیام نهایی نگه دارد.
+قواعد همان [انتساب commit](attribution.fa.md) است: یک خط خالی پیش از trailerها، املای `Co-authored-by:`، و بدون دامنهٔ نمونه (`example.com`).
+
+**squash merge پیام نهایی را بازنویسی می‌کند.** در #18 / #19 / #21 مشاهده شد: ادغام‌کننده نویسندهٔ commit روی `main` شد، trailer خودِ او حذف شد، و نویسندهٔ اصلی PR (`cursor[bot]`) به `Co-authored-by` تبدیل شد. گزارش پیشرفت pair همان commit نشسته‌روی پیش‌فرض را می‌شمارد، نه trailerهای شاخهٔ PR که squash نگه نداشته. اگر trailer لازم است باید در پیام squash/merge باقی بماند.
 
 ## آزمایش محلی قالب (بدون هل دادن)
 
@@ -87,7 +89,7 @@ EOF
 
 - رویداد قابل مشاهده ≠ نشان. جزئیات محاسبه در public preview کامل منتشر نشده است.
 - گردش‌کار `Validate co-authors` فقط قالب را از API همان PR می‌خواند.
-- گردش‌کار `Collaboration progress report` پس از merge، همین قالب را روی commitهای PRهای ادغام‌شده می‌شمارد؛ اعطا را اعلام نمی‌کند.
+- گردش‌کار `Collaboration progress report` پس از merge، قالب را روی commit **نشسته روی شاخهٔ پیش‌فرض** می‌شمارد (نه لزوماً commitهای شاخهٔ PR)؛ اعطا را اعلام نمی‌کند.
 - فعالیت با هویت `github-actions[bot]` برای ramincsy یا backrebital-lgtm شمرده نمی‌شود.
 - پرسش و پاسخ ساختگی Discussions برای Galaxy Brain نسازید.
 

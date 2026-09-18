@@ -7,7 +7,8 @@ const allowedRoutes = {
     new RegExp(`^${REPO}/pulls(?:\\?.*)?$`),
     new RegExp(`^${REPO}/pulls/\\d+$`),
     new RegExp(`^${REPO}/pulls/\\d+/reviews(?:\\?.*)?$`),
-    new RegExp(`^${REPO}/pulls/\\d+/commits(?:\\?.*)?$`)
+    new RegExp(`^${REPO}/pulls/\\d+/commits(?:\\?.*)?$`),
+    new RegExp(`^${REPO}/commits/[0-9a-fA-F]{40}$`)
   ],
   POST: [
     new RegExp(`^${REPO}/issues$`),

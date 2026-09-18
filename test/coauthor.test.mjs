@@ -75,10 +75,12 @@ test('requirePeer fails when the other member is not in a noreply trailer', () =
 test('maps GitHub commit payloads and writes a non-farming summary', () => {
   const mapped = mapPullCommits([{
     sha: 'aa',
+    parents: [{ sha: 'p1' }, { sha: 'p2' }],
     commit: { message: 'x', author: { name: 'A', email: 'a@users.noreply.github.com' } },
     author: { login: 'ramincsy' }
   }]);
   assert.equal(mapped[0].authorLogin, 'ramincsy');
+  assert.equal(mapped[0].parentCount, 2);
   const participants = ['ramincsy', 'backrebital-lgtm'];
   assert.deepEqual(memberLoginsFromNoreplyTrailers([{
     authorLogin: 'cursor[bot]',

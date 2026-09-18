@@ -4,6 +4,8 @@ import { readFile } from 'node:fs/promises';
 import {
   communityTier,
   mergedPullCounts,
+  mergeCommitSha,
+  landedPairCommits,
   pairPathStats,
   renderProgress,
   collectMergedPulls,
@@ -50,6 +52,9 @@ test('progress report is read-only and labels community thresholds as unofficial
   assert.match(report, /Pair Extraordinaire/);
   assert.match(report, /انسان مستقل نیست/);
   assert.match(report, /1, 10, 24, 48/);
+  assert.match(report, /روی شاخهٔ پیش‌فرض نشسته‌اند/);
+  assert.match(report, /trailer خودِ نویسنده را حذف/);
+  assert.match(report, /نویسندهٔ GitHub آن‌ها عضو نیست/);
   assert.doesNotMatch(report, /workflow_dispatch.*creat/i);
   const routes = [];
   await collectMergedPulls(async route => {
@@ -119,20 +124,124 @@ test('pair path attributes both members when a bot authored the commit', () => {
   assert.deepEqual(stats.counts, { ramincsy: 1, 'backrebital-lgtm': 1 });
 });
 
-test('collectPairPullCommits reads merged pull commits only and refuses a bad repo', async () => {
+test('squash landing uses the merge commit, not PR-branch trailers that squash rewrote', () => {
+  const branch = {
+    sha: '379fddf000000000000000000000000000000000',
+    authorLogin: 'cursor[bot]',
+    authorEmail: 'cursoragent@cursor.com',
+    parentCount: 1,
+    message: [
+      'feat: count pair-path candidate commits',
+      '',
+      'Co-authored-by: ramincsy <34828058+ramincsy@users.noreply.github.com>',
+      'Co-authored-by: backrebital-lgtm <329678572+backrebital-lgtm@users.noreply.github.com>'
+    ].join('\n')
+  };
+  const landed = {
+    sha: '953756b1d60d1645f13a51d48b2d21ffc1202140',
+    authorLogin: 'ramincsy',
+    authorEmail: '34828058+ramincsy@users.noreply.github.com',
+    parentCount: 1,
+    message: [
+      'feat: count pair-path commits and document verified noreply trailers (#18)',
+      '',
+      'Co-authored-by: Cursor Agent <cursoragent@cursor.com>',
+      'Co-authored-by: backrebital-lgtm <329678572+backrebital-lgtm@users.noreply.github.com>'
+    ].join('\n')
+  };
+  assert.deepEqual(landedPairCommits(landed, [branch]).map(c => c.sha), [landed.sha]);
+  const fromBranch = pairPathStats([{ number: 18, commits: [branch] }], ['ramincsy', 'backrebital-lgtm']);
+  const fromLanded = pairPathStats([{ number: 18, commits: landedPairCommits(landed, [branch]) }], ['ramincsy', 'backrebital-lgtm']);
+  assert.deepEqual(fromBranch.counts, { ramincsy: 1, 'backrebital-lgtm': 1 });
+  assert.deepEqual(fromLanded, {
+    counts: { ramincsy: 0, 'backrebital-lgtm': 1 },
+    pairCommits: 1,
+    pairPulls: 1,
+    malformedTrailers: 0
+  });
+});
+
+test('merge commits count non-merge PR commits and skip the merge commit itself', () => {
+  const merge = {
+    sha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    parentCount: 2,
+    authorLogin: 'ramincsy',
+    message: 'Merge pull request #9'
+  };
+  const feature = {
+    sha: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+    parentCount: 1,
+    authorLogin: 'ramincsy',
+    authorEmail: '34828058+ramincsy@users.noreply.github.com',
+    message: 'Shared docs\n\nCo-authored-by: backrebital-lgtm <329678572+backrebital-lgtm@users.noreply.github.com>'
+  };
+  const ontoMain = {
+    sha: 'cccccccccccccccccccccccccccccccccccccccc',
+    parentCount: 2,
+    authorLogin: 'backrebital-lgtm',
+    message: 'Merge branch \'main\' into feature'
+  };
+  const landed = landedPairCommits(merge, [feature, ontoMain]);
+  assert.deepEqual(landed.map(c => c.sha), [feature.sha]);
+  const stats = pairPathStats([{ number: 9, commits: landed }], ['ramincsy', 'backrebital-lgtm']);
+  assert.equal(stats.pairCommits, 1);
+  assert.deepEqual(stats.counts, { ramincsy: 0, 'backrebital-lgtm': 1 });
+});
+
+test('collectPairPullCommits reads the merge commit SHA and only lists PR commits for merge commits', async () => {
   const routes = [];
+  const squashSha = '953756b1d60d1645f13a51d48b2d21ffc1202140';
+  const mergeSha = 'a'.repeat(40);
   const pulls = [
-    { number: 8, merged_at: '2026-09-18T00:00:00Z' },
-    { number: 7, merged_at: null },
-    { number: 9, merged_at: '2026-09-18T01:00:00Z' }
+    { number: 8, merged_at: '2026-09-18T00:00:00Z', merge_commit_sha: squashSha },
+    { number: 7, merged_at: null, merge_commit_sha: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef' },
+    { number: 9, merged_at: '2026-09-18T01:00:00Z', merge_commit_sha: mergeSha }
   ];
   const pages = await collectPairPullCommits(async route => {
     routes.push(route);
-    return [{ sha: '1', commit: { message: 'ok', author: { email: 'a@b.co' } }, author: { login: 'ramincsy' } }];
+    if (route.endsWith(`/commits/${squashSha}`)) {
+      return {
+        sha: squashSha,
+        parents: [{ sha: 'parent' }],
+        commit: { message: 'squash', author: { email: 'a@b.co' } },
+        author: { login: 'ramincsy' }
+      };
+    }
+    if (route.endsWith(`/commits/${mergeSha}`)) {
+      return {
+        sha: mergeSha,
+        parents: [{ sha: 'p1' }, { sha: 'p2' }],
+        commit: { message: 'Merge pull request #9', author: { email: 'a@b.co' } },
+        author: { login: 'ramincsy' }
+      };
+    }
+    if (route.includes('/pulls/9/commits')) {
+      return [{
+        sha: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+        parents: [{ sha: 'p1' }],
+        commit: { message: 'ok', author: { email: 'a@b.co' } },
+        author: { login: 'ramincsy' }
+      }];
+    }
+    throw new Error(`unexpected route ${route}`);
   }, 'ramincsy/Gthub-Achievements', pulls);
-  assert.deepEqual(pages.map(item => item.number), [8, 9]);
-  assert.equal(routes.length, 2);
-  assert.match(routes[0], /\/pulls\/8\/commits\?per_page=100&page=1$/);
-  assert.match(routes[1], /\/pulls\/9\/commits\?per_page=100&page=1$/);
+  assert.deepEqual(pages.map(item => ({ number: item.number, method: item.mergeMethod, shas: item.commits.map(c => c.sha) })), [
+    { number: 8, method: 'squash-or-rebase', shas: [squashSha] },
+    { number: 9, method: 'merge', shas: ['bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'] }
+  ]);
+  assert.equal(routes.length, 3);
+  assert.equal(routes[0], `/repos/ramincsy/Gthub-Achievements/commits/${squashSha}`);
+  assert.equal(routes[1], `/repos/ramincsy/Gthub-Achievements/commits/${mergeSha}`);
+  assert.match(routes[2], /\/pulls\/9\/commits\?per_page=100&page=1$/);
   await assert.rejects(collectPairPullCommits(async () => [], '../evil/x', []), /repository/);
+  await assert.rejects(collectPairPullCommits(async () => [], 'ramincsy/Gthub-Achievements', [
+    { number: 18, merged_at: '2026-09-18T00:00:00Z' }
+  ]), /missing a merge commit SHA/);
+});
+
+test('mergeCommitSha accepts only a full git SHA', () => {
+  assert.equal(mergeCommitSha('953756b1d60d1645f13a51d48b2d21ffc1202140'), '953756b1d60d1645f13a51d48b2d21ffc1202140');
+  assert.equal(mergeCommitSha('main'), null);
+  assert.equal(mergeCommitSha('379fddf'), null);
+  assert.equal(mergeCommitSha(''), null);
 });

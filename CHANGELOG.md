@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.8
+
+- Pair-path progress counts commits that landed on the default branch (`merge_commit_sha`): squash/rebase uses that commit; a merge commit uses the PR's non-merge commits. Missing merge SHAs fail the run.
+- README states current achievement-path status. Squash may rewrite the author and drop the merger's own trailer; PR-branch trailers that did not land are not counted.
+- Two accounts share one owner; an automatic review request is not an independent human review. Achievements are not guaranteed.
+
 ## 0.3.7
 
 - `Request peer review` also covers non-member PR authors (including `cursor[bot]`) when a commit on that PR has a well-formed project-member GitHub noreply trailer. Existing member-authored behavior is unchanged.
@@ -11,6 +17,7 @@
 - Local `npm run coauthor` validates `Co-authored-by` trailers from `git log` without `GH_TOKEN`. CI runs it on the triggering ref; solo commits without trailers remain allowed.
 - `npm test` now sets `--test-timeout=30000` so a hung test fails the job instead of sitting until the runner limit.
 - Persian contribution checklist and achievement notes state that Quickdraw (close within about five minutes) and YOLO (merge without review) are not automated and are out of scope.
+
 ## 0.3.5
 
 - Collaboration progress report counts well-formed peer `Co-authored-by` trailers on merged pull request commits (Pair Extraordinaire candidates only; not a grant).

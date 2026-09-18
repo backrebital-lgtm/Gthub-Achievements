@@ -36,6 +36,19 @@ export function mergedPullCounts(pulls, participants) {
   return { counts, merged, closedUnmerged };
 }
 
+export function mergeCommitSha(value) {
+  const sha = String(value ?? '').trim();
+  return /^[0-9a-f]{40}$/i.test(sha) ? sha : null;
+}
+
+export function landedPairCommits(mergeCommit, pullCommits = []) {
+  if (!mergeCommit?.sha) throw new Error('Merged pull is missing a merge commit.');
+  if ((mergeCommit.parentCount ?? 0) >= 2) {
+    return (pullCommits ?? []).filter(commit => (commit.parentCount ?? 0) < 2);
+  }
+  return [mergeCommit];
+}
+
 export function pairPathStats(pullsWithCommits, participants) {
   const counts = Object.fromEntries(participants.map(login => [login, 0]));
   let pairCommits = 0;
@@ -98,10 +111,12 @@ export function renderProgress({
     '',
     '### Pair Extraordinaire (گزارش جامعه؛ غیررسمی)',
     '',
-    'فقط قالب `Co-authored-by` روی commitهای PRهای **mergeشده** شمرده می‌شود. GitHub باید ایمیل را به حساب وصل کند، PR را به شاخهٔ پیش‌فرض ادغام کند، و Achievement را پردازش کند؛ هیچ‌کدام اینجا تأیید نمی‌شود.',
+    'فقط قالب `Co-authored-by` روی commitهایی شمرده می‌شود که **روی شاخهٔ پیش‌فرض نشسته‌اند**. squash/rebase: همان merge commit (یک والد). merge: commitهای غیر-merge همان PR. rebase چندcommit جداگانه پیمایش نمی‌شود.',
+    'GitHub هنگام squash ممکن است نویسنده را به ادغام‌کننده عوض کند، trailer خودِ نویسنده را حذف کند، و نویسندهٔ اصلی PR را co-author کند. trailer روی شاخهٔ PR اگر روی main ننشیند شمرده نمی‌شود.',
+    'PRهایی که نویسندهٔ GitHub آن‌ها عضو نیست برای Pull Shark آن اعضا شمرده نمی‌شوند. GitHub باید ایمیل را به حساب وصل کند و Achievement را پردازش کند؛ هیچ‌کدام اینجا تأیید نمی‌شود.',
     'دو حساب یک مالک دارند؛ این شمارش همکاری دو انسان مستقل نیست. `github-actions[bot]` نشان نمی‌دهد.',
     '',
-    `Commitهای pair (trailer همکار خوش‌فرم): ${pair.pairCommits} — PRهای mergeشدهٔ حاوی آن‌ها: ${pair.pairPulls} — trailer نامعتبر نادیده‌گرفته‌شده: ${pair.malformedTrailers}`,
+    `Commitهای pair نشسته روی پیش‌فرض (trailer همکار خوش‌فرم): ${pair.pairCommits} — PRهای mergeشدهٔ حاوی آن‌ها: ${pair.pairPulls} — trailer نامعتبر نادیده‌گرفته‌شده: ${pair.malformedTrailers}`,
     '',
     '| حساب | commitهایی که co-author noreply او هستند | آستانهٔ رسیده‌شده | تا آستانهٔ بعدی |',
     '| --- | ---: | ---: | ---: |');
@@ -127,8 +142,19 @@ export async function collectPairPullCommits(api, repo, pulls) {
   const result = [];
   for (const pull of merged) {
     if (!Number.isInteger(pull.number) || pull.number < 1) throw new Error('Invalid pull number');
-    const commits = mapPullCommits(await listAll(api, `/repos/${repo}/pulls/${pull.number}/commits`));
-    result.push({ number: pull.number, commits });
+    const sha = mergeCommitSha(pull.merge_commit_sha);
+    if (!sha) throw new Error(`Merged pull #${pull.number} is missing a merge commit SHA.`);
+    const mergeCommit = mapPullCommits([await api(`/repos/${repo}/commits/${sha}`)])[0];
+    if (!mergeCommit?.sha) throw new Error(`Merged pull #${pull.number} is missing a merge commit.`);
+    let pullCommits = [];
+    if ((mergeCommit.parentCount ?? 0) >= 2) {
+      pullCommits = mapPullCommits(await listAll(api, `/repos/${repo}/pulls/${pull.number}/commits`));
+    }
+    result.push({
+      number: pull.number,
+      mergeMethod: (mergeCommit.parentCount ?? 0) >= 2 ? 'merge' : 'squash-or-rebase',
+      commits: landedPairCommits(mergeCommit, pullCommits)
+    });
   }
   return result;
 }

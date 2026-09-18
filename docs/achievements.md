@@ -11,7 +11,7 @@ Tier numbers below are **community-reported**, not official GitHub documentation
 | Achievement | Confidence | Related event | Community tiers | What this repo supports | Out of scope |
 | --- | --- | --- | --- | --- | --- |
 | Pull Shark | Community (feature: official preview) | Pull requests **opened by that account** and **merged** | ~2 / 16 / 128 / 1024 | Real work, reviewed merges; progress job **counts only** | Close-without-merge; empty PRs |
-| Pair Extraordinaire | Community + official `Co-authored-by` syntax | Trailer whose **email is linked** to the co-author’s GitHub account; commit **merged via PR to the default branch** | ~1 / 10 / 24 / 48 | Real shared commits; Actions validate trailer **format** | Second name for one person; `example.com` placeholders |
+| Pair Extraordinaire | Community + official `Co-authored-by` syntax | Trailer whose **email is linked** to the co-author’s GitHub account; commit **merged via PR to the default branch** | ~1 / 10 / 24 / 48 | Real shared commits; Actions validate trailer **format**; progress counts commits **landed on the default branch** (squash may rewrite trailers) | Second name for one person; `example.com` placeholders |
 | Quickdraw | Community | Close an issue or PR within ~5 minutes of opening | Unspecified | Documented only; not automated | Instant close for a badge |
 | YOLO | Community | Merge **without review** | Unspecified | This project requests review; workflows never approve or merge | Unreviewed merge for a badge |
 | Galaxy Brain | Community | **Accepted answers** in Discussions **Q&A** | ~2 / 8 / 16 / 32 | Honest Q&A template; no fabricated accepts. Community org discussions may be restricted | Fake questions and answers |

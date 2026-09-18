@@ -65,7 +65,8 @@ export function mapPullCommits(apiCommits) {
     message: commit.commit?.message ?? '',
     authorEmail: commit.commit?.author?.email ?? '',
     authorLogin: commit.author?.login ?? '',
-    authorName: commit.commit?.author?.name ?? ''
+    authorName: commit.commit?.author?.name ?? '',
+    parentCount: Array.isArray(commit.parents) ? commit.parents.length : 0
   }));
 }
 

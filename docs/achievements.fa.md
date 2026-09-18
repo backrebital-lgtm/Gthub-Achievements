@@ -11,7 +11,7 @@ GitHub رویدادهای واجد شرایط را به Achievement تبدیل �
 | نشان | منبع اطمینان | رویداد مرتبط (خلاصه) | آستانهٔ گزارش جامعه | مسیر این مخزن | خارج از محدوده |
 | --- | --- | --- | --- | --- | --- |
 | Pull Shark | جامعه (وجود نشان: پیش‌نمایش رسمی) | PRهایی که **همان حساب باز کرده** و **merge** شده‌اند | حدود ۲ / ۱۶ / ۱۲۸ / ۱۰۲۴ | کار واقعی، PR با توضیح، merge پس از بررسی؛ گزارش پیشرفت فقط می‌شمارد | باز و بستن بدون merge؛ PR تهی |
-| Pair Extraordinaire | جامعه + قالب رسمی `Co-authored-by` | trailer با **ایمیل متصل به حساب** همکار؛ commit از طریق **PR ادغام‌شده به شاخهٔ پیش‌فرض** | حدود ۱ / ۱۰ / ۲۴ / ۴۸ | همکاری واقعی در همان commit؛ اعتبارسنجی قالب در Actions | ثبت نام دوم برای یک نفر؛ ایمیل نمونه (`example.com`) |
+| Pair Extraordinaire | جامعه + قالب رسمی `Co-authored-by` | trailer با **ایمیل متصل به حساب** همکار؛ commit از طریق **PR ادغام‌شده به شاخهٔ پیش‌فرض** | حدود ۱ / ۱۰ / ۲۴ / ۴۸ | همکاری واقعی در همان commit؛ اعتبارسنجی قالب؛ شمارش commit **نشسته روی main** (squash ممکن است trailer را بازنویسی کند) | ثبت نام دوم برای یک نفر؛ ایمیل نمونه (`example.com`) |
 | Quickdraw | جامعه | بستن Issue یا PR ظرف حدود ۵ دقیقه پس از باز شدن | گزارش نشده | مستند شده؛ خودکارسازی نمی‌شود | بستن فوری برای نشان |
 | YOLO | جامعه | merge **بدون review** | گزارش نشده | این پروژه بررسی می‌خواهد؛ گردش‌کار approve/merge نمی‌کند | merge بدون نگاه برای نشان |
 | Galaxy Brain | جامعه | پاسخ پذیرفته‌شده در Discussions از نوع **Q&A** | حدود ۲ / ۸ / ۱۶ / ۳۲ | قالب پرسش واقعی؛ پاسخ نمایشی ساخته نمی‌شود. بحث‌های سازمان Community ممکن است محدود باشد | پرسش و پاسخ ساختگی |
@@ -50,7 +50,7 @@ Co-authored-by: NAME <EMAIL>
 
 ## شواهد
 
-جزئیات عملی انتساب و Q&A: [عیب‌یابی co-author و Discussions](examples/attribution.fa.md). مثال trailer با شناسهٔ تأییدشده: [Pair Extraordinaire](examples/pair-extraordinaire.fa.md). گردش‌کارها: [workflows.fa.md](workflows.fa.md).
+جزئیات عملی انتساب و Q&A: [عیب‌یابی co-author و Discussions](examples/attribution.fa.md). مثال trailer با شناسهٔ تأییدشده: [Pair Extraordinaire](examples/pair-extraordinaire.fa.md). گزارش پیشرفت commit نشسته‌روی شاخهٔ پیش‌فرض را می‌شمارد. گردش‌کارها: [workflows.fa.md](workflows.fa.md).
 
 - [مرجع رسمی پروفایل و Achievements](https://docs.github.com/en/account-and-profile/reference/profile-reference) — پیش‌نمایش عمومی؛ بدون کاتالوگ کامل.
 - [نویسندگی مشترک](https://docs.github.com/en/pull-requests/how-tos/commit-changes/creating-a-commit-with-multiple-authors)

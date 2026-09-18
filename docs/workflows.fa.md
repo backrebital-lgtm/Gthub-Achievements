@@ -32,7 +32,7 @@
 | `Validate co-authors` | Pair Extraordinaire (قالب) | trailerهای `Co-authored-by` را از API همان PR می‌خواند و با **کد شاخهٔ پیش‌فرض** می‌سنجد | ایمیل را به حساب وصل نمی‌کند؛ trailer نمی‌سازد؛ کد PR را اجرا نمی‌کند |
 | `Request peer review` | بررسی متقابل | با PR غیرپیش‌نویس یکی از دو عضو، از عضو دیگر بررسی می‌خواهد؛ اگر نویسنده عضو نیست ولی trailer noreply خوش‌فرم یک عضو روی commit همان PR هست، از عضوی که هنوز reviewer نیست درخواست می‌شود؛ **کد شاخهٔ پیش‌فرض** را اجرا می‌کند | approve، merge، تکرار درخواست موجود، درخواست برای bot/خارجی بدون trailer عضو، اجرای کد PR |
 | `Hourly maintenance` | هماهنگی صف | واگذاری کار آماده، درخواست بررسی جاافتاده، به‌روزرسانی Issue وضعیت پس از تغییر صف یا ثبت/کنارگذاشتن review | کد نمی‌نویسد؛ PR خالی نمی‌سازد؛ merge نمی‌کند؛ review فقط-کامنت را اجرا نمی‌کند |
-| `Collaboration progress report` | پیگیری Pull Shark و pair | با اجرا دستی یا دوشنبهٔ هفته (۰۳:۴۷ UTC) PRهای mergeشده و trailerهای خوش‌فرم `Co-authored-by` روی commitهای آن‌ها را می‌شمارد؛ **کد شاخهٔ پیش‌فرض** را اجرا می‌کند | Issue/PR نمی‌سازد؛ نشان را تأیید نمی‌کند؛ شاخهٔ انتخاب‌شده در `workflow_dispatch` را اجرا نمی‌کند |
+| `Collaboration progress report` | پیگیری Pull Shark و pair | با اجرا دستی یا دوشنبهٔ هفته (۰۳:۴۷ UTC) PRهای mergeشدهٔ **عضو-نویسنده** و trailerهای خوش‌فرم روی commit **نشسته روی شاخهٔ پیش‌فرض** را می‌شمارد (squash: همان merge commit؛ merge: commitهای غیر-merge). **کد شاخهٔ پیش‌فرض** را اجرا می‌کند | Issue/PR نمی‌سازد؛ نشان را تأیید نمی‌کند؛ trailer بازنویسی‌شدهٔ squash را از روی شاخهٔ PR حدس نمی‌زند؛ شاخهٔ انتخاب‌شده در `workflow_dispatch` را اجرا نمی‌کند |
 
 `Hourly maintenance` را تغییر ندهید مگر برای هماهنگی صف. اجرای آزمایشی: Actions → Hourly maintenance → Run workflow با `dry_run` روشن.
 
