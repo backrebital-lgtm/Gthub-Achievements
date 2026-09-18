@@ -18,15 +18,33 @@ export function reviewState(pull, reviews) {
 }
 
 const hasLabel = (issue, label) => (issue.labels ?? []).some(l => (typeof l === 'string' ? l : l.name) === label);
-export function planAssignments(issues, config) {
+
+export function openBlockers(blockers = []) {
+  return blockers.filter(blocker => blocker && blocker.state === 'open' && Number.isInteger(blocker.number));
+}
+
+function blockedByNative(issue, blockersByNumber) {
+  if (!blockersByNumber) return false;
+  if (!blockersByNumber.has(issue.number)) return true;
+  return openBlockers(blockersByNumber.get(issue.number)).length > 0;
+}
+
+export function assignmentCandidates(issues, config) {
+  const priority = i => hasLabel(i, 'priority:high') ? 0 : hasLabel(i, 'priority:normal') ? 1 : 2;
+  return issues
+    .filter(i => !i.pull_request && i.state !== 'closed' && hasLabel(i, config.readyLabel)
+      && !hasLabel(i, config.blockedLabel) && !(i.assignees ?? []).length)
+    .sort((a, b) => priority(a) - priority(b) || a.number - b.number);
+}
+
+export function planAssignments(issues, config, blockersByNumber) {
   const load = new Map(config.participants.map(p => [p, 0]));
   for (const issue of issues.filter(i => !i.pull_request && i.state !== 'closed')) for (const assignee of issue.assignees ?? []) {
     if (load.has(assignee.login)) load.set(assignee.login, load.get(assignee.login) + 1);
   }
-  const priority = i => hasLabel(i, 'priority:high') ? 0 : hasLabel(i, 'priority:normal') ? 1 : 2;
-  const eligible = issues.filter(i => !i.pull_request && i.state !== 'closed' && hasLabel(i, config.readyLabel) && !hasLabel(i, config.blockedLabel) && !(i.assignees ?? []).length);
+  const eligible = assignmentCandidates(issues, config).filter(i => !blockedByNative(i, blockersByNumber));
   const actions = [];
-  for (const issue of eligible.sort((a, b) => priority(a) - priority(b) || a.number - b.number)) {
+  for (const issue of eligible) {
     const person = [...config.participants].sort((a, b) => load.get(a) - load.get(b))[0];
     if (load.get(person) >= config.maxAssignedPerPerson) break;
     actions.push({ number: issue.number, assignee: person });

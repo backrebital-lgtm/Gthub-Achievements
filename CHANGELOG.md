@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+
+- Coordinator reads native GitHub `blocked by` links before assigning ready work; open blockers skip assignment, closed blockers do not, and the `blocked` label remains the manual stop.
+- Missing dependency lists (HTTP 404/410) are treated as empty; creating or deleting dependencies is still forbidden. Reports mention blocker numbers without copying untrusted issue text.
+
 ## 0.3.0
 
 - Practical Persian branch/PR tutorial with a locally tested merge-versus-close example.

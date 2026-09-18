@@ -3,6 +3,7 @@ const allowedRoutes = {
   GET: [
     new RegExp(`^${REPO}/issues(?:\\?.*)?$`),
     new RegExp(`^${REPO}/issues/\\d+$`),
+    new RegExp(`^${REPO}/issues/\\d+/dependencies/blocked_by(?:\\?.*)?$`),
     new RegExp(`^${REPO}/pulls(?:\\?.*)?$`),
     new RegExp(`^${REPO}/pulls/\\d+$`),
     new RegExp(`^${REPO}/pulls/\\d+/reviews(?:\\?.*)?$`)
@@ -54,6 +55,17 @@ export async function listAll(api, route, maxPages = 100) {
     }
   }
   throw new Error('Pagination limit reached; refusing to use incomplete data');
+}
+
+export async function listBlockedBy(api, repo, issueNumber, maxPages = 100) {
+  if (typeof repo !== 'string' || !/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('A repository of the form owner/name is required.');
+  if (!Number.isInteger(issueNumber) || issueNumber < 1) throw new Error('Invalid issue number');
+  try {
+    return await listAll(api, `/repos/${repo}/issues/${issueNumber}/dependencies/blocked_by`, maxPages);
+  } catch (error) {
+    if (error instanceof Error && /GitHub API GET failed: HTTP (404|410)/.test(error.message)) return [];
+    throw error;
+  }
 }
 
 export function createApi(token, { fetchImpl = fetch, sleep = ms => new Promise(resolve => setTimeout(resolve, ms)), now = Date.now } = {}) {

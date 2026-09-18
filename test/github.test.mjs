@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { listAll, createApi, assertAllowedRoute, pageSlice } from '../scripts/github.mjs';
+import { listAll, listBlockedBy, createApi, assertAllowedRoute, pageSlice } from '../scripts/github.mjs';
 
 test('pagination includes later pages and preserves existing query', async () => {
   const routes = [];
@@ -88,12 +88,23 @@ test('serial mutations are spaced by at least one second', async () => {
 
 test('only coordination write routes are allowed', () => {
   assert.doesNotThrow(() => assertAllowedRoute('GET', '/repos/a/b/issues?state=open&page=1'));
+  assert.doesNotThrow(() => assertAllowedRoute('GET', '/repos/a/b/issues/3/dependencies/blocked_by'));
   assert.doesNotThrow(() => assertAllowedRoute('POST', '/repos/a/b/issues/3/assignees'));
   assert.doesNotThrow(() => assertAllowedRoute('POST', '/repos/a/b/pulls/4/requested_reviewers'));
+  assert.throws(() => assertAllowedRoute('POST', '/repos/a/b/issues/3/dependencies/blocked_by'), /not allowed/);
+  assert.throws(() => assertAllowedRoute('DELETE', '/repos/a/b/issues/3/dependencies/blocked_by/9'), /not allowed/);
   assert.throws(() => assertAllowedRoute('GET', '/repos/a/b/actions/secrets'), /not allowed/);
   assert.throws(() => assertAllowedRoute('GET', '/user'), /Only repository API routes/);
   assert.throws(() => assertAllowedRoute('POST', '/repos/a/b/git/blobs'), /not allowed/);
   assert.throws(() => assertAllowedRoute('GET', 'https://evil.example/repos/a/b/issues'), /Only repository API routes/);
+});
+
+test('listBlockedBy treats missing lists as empty and rejects unsafe input', async () => {
+  assert.deepEqual(await listBlockedBy(async () => { throw new Error('GitHub API GET failed: HTTP 404'); }, 'a/b', 1), []);
+  assert.deepEqual(await listBlockedBy(async () => { throw new Error('GitHub API GET failed: HTTP 410'); }, 'a/b', 1), []);
+  await assert.rejects(listBlockedBy(async () => { throw new Error('GitHub API GET failed: HTTP 403'); }, 'a/b', 1), /HTTP 403/);
+  await assert.rejects(listBlockedBy(async () => [], 'a/b', 0), /Invalid issue number/);
+  await assert.rejects(listBlockedBy(async () => [], '../evil/x', 1), /repository/);
 });
 
 test('createApi rejects disallowed routes before fetching', async () => {

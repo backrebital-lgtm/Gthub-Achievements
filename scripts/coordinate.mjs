@@ -1,8 +1,8 @@
 import { appendFile, readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
-import { createApi, listAll } from './github.mjs';
+import { createApi, listAll, listBlockedBy } from './github.mjs';
 import { validateConfig } from './config.mjs';
-import { planAssignments, reviewerFor, reviewState } from './planner.mjs';
+import { planAssignments, reviewerFor, reviewState, assignmentCandidates, openBlockers } from './planner.mjs';
 
 export const MARKER = '<!-- gthub-achievements:coordination:v1 -->';
 const isReport = issue => issue.user?.login === 'github-actions[bot]' && issue.body?.includes(MARKER);
@@ -30,8 +30,13 @@ export function render(issues, pulls, details = {}) {
   for (const item of [...tasks].sort((a, b) => a.number - b.number)) {
     const assignees = (item.assignees ?? []).map(a => `@${a.login}`).sort().join(', ');
     lines.push(`- #${item.number} — ${assignees || 'بدون مسئول'} — آخرین تغییر: ${item.updated_at}`);
+    const blockers = openBlockers(item.blockedBy).map(b => `#${b.number}`).join('، ');
+    if (blockers) lines.push(`  - وابسته به ${blockers} (باز)؛ تا بسته شدن مانع واگذار نمی‌شود`);
   }
   if (!tasks.length) lines.push('کار بازی وجود ندارد.');
+  if (details.omittedDependencies) {
+    lines.push(`توجه: ${details.omittedDependencies} کار آماده به‌خاطر سقف ${details.maxPullsPerRun} مورد در این اجرا برای blocked-by بومی بررسی نشد و واگذار نشد.`);
+  }
   lines.push('', 'جزئیات و پرسش‌های واقعی را در Issue یا PR مربوط ثبت کنید. دریافت Achievement به پردازش GitHub وابسته است.');
   return { body: lines.join('\n'), actionable: tasks.length + pulls.length > 0 };
 }
@@ -44,31 +49,45 @@ export async function coordinate(api, repo, summaryPath, options = {}) {
   const plans = [];
   let mutations = 0;
   let omittedPulls = 0;
+  let omittedDependencies = 0;
   if (config) {
-    for (const action of planAssignments(issues.filter(i => !isReport(i)), config)) {
+    const candidates = assignmentCandidates(issues.filter(i => !isReport(i)), config);
+    const inspectableCandidates = candidates.slice(0, config.maxPullsPerRun);
+    omittedDependencies = Math.max(0, candidates.length - inspectableCandidates.length);
+    const blockersByNumber = new Map();
+    for (const issue of inspectableCandidates) {
+      const blockers = await listBlockedBy(api, repo, issue.number);
+      blockersByNumber.set(issue.number, blockers);
+      issue.blockedBy = openBlockers(blockers);
+    }
+    for (const action of planAssignments(issues.filter(i => !isReport(i)), config, blockersByNumber)) {
       if (mutations >= config.maxMutationsPerRun) break;
       if (dryRun) {
         plans.push(`Would assign #${action.number} to @${action.assignee}`);
         mutations++;
         continue;
       }
-      // Refresh before mutating, preserving a manual assignment or label change.
+      // Refresh before mutating, preserving a manual assignment, label or dependency change.
       const fresh = await api(`/repos/${repo}/issues/${action.number}`);
       const currentIssues = await listAll(api, `/repos/${repo}/issues?state=open`);
       const currentIndex = currentIssues.findIndex(i => i.number === action.number);
       if (currentIndex < 0) continue;
       currentIssues[currentIndex] = fresh;
-      const stillPlanned = planAssignments(currentIssues.filter(i => !isReport(i)), config)
+      const freshBlockers = new Map(blockersByNumber);
+      freshBlockers.set(action.number, await listBlockedBy(api, repo, action.number));
+      const stillPlanned = planAssignments(currentIssues.filter(i => !isReport(i)), config, freshBlockers)
         .some(a => a.number === action.number && a.assignee === action.assignee);
       if (!stillPlanned) {
-        plans.push(`Skipped #${action.number}: assignment, labels or workload changed`);
+        plans.push(`Skipped #${action.number}: assignment, labels, workload or dependencies changed`);
+        const original = issues.find(i => i.number === action.number);
+        if (original) original.blockedBy = openBlockers(freshBlockers.get(action.number));
         continue;
       }
       const updated = await api(`/repos/${repo}/issues/${action.number}/assignees`, { method: 'POST', body: { assignees: [action.assignee] } });
       mutations++;
       plans.push(`Assigned #${action.number} to @${action.assignee}`);
       const index = issues.findIndex(i => i.number === action.number);
-      if (index >= 0) issues[index] = updated;
+      if (index >= 0) issues[index] = { ...updated, blockedBy: openBlockers(freshBlockers.get(action.number)) };
     }
     const { inspectable, omitted } = pullsToInspect(pulls, config.maxPullsPerRun);
     omittedPulls = omitted;
@@ -96,10 +115,15 @@ export async function coordinate(api, repo, summaryPath, options = {}) {
       pull.reviewStatus = reviewState({ ...fresh, requested_reviewers: [{ login: reviewer }] }, freshReviews);
     }
   }
-  const report = render(issues, pulls, { omittedPulls, maxPullsPerRun: config?.maxPullsPerRun });
+  const report = render(issues, pulls, {
+    omittedPulls,
+    omittedDependencies,
+    maxPullsPerRun: config?.maxPullsPerRun
+  });
   if (summaryPath) await appendFile(summaryPath, report.body + '\n\n## Run result\n\n' +
     `Fetched ${issues.length} open issues (${issues.pagesFetched ?? 1} page) and ${pulls.length} open pulls (${pulls.pagesFetched ?? 1} page).\n\n` +
     (omittedPulls ? `${omittedPulls} pull(s) were not inspected in detail because of maxPullsPerRun=${config.maxPullsPerRun}.\n\n` : '') +
+    (omittedDependencies ? `${omittedDependencies} ready issue(s) were not checked for native blocked-by because of maxPullsPerRun=${config.maxPullsPerRun}.\n\n` : '') +
     (dryRun ? 'Dry run; no writes.' : `${mutations} assignment/review writes completed.`) + '\n\n' +
     (plans.length ? plans.map(p => `- ${p}`).join('\n') : 'No assignment or review action needed.') + '\n');
   if (dryRun) return 'dry-run';

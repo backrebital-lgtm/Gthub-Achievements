@@ -42,3 +42,13 @@ test('pending review, drafts and external authors do not get automatic requests'
   assert.equal(reviewerFor({ ...pull, draft: true }, [], ['a', 'b']), null);
   assert.equal(reviewerFor({ ...pull, user: { login: 'external' } }, [], ['a', 'b']), null);
 });
+test('open native blockers skip assignment; closed blockers do not', () => {
+  const blockers = new Map([
+    [1, [{ number: 9, state: 'open', body: 'UNTRUSTED' }]],
+    [2, [{ number: 8, state: 'closed' }]]
+  ]);
+  assert.deepEqual(planAssignments([issue(1), issue(2)], config, blockers), [{ number: 2, assignee: 'a' }]);
+});
+test('uninspected candidates are not assigned when a dependency map is provided', () => {
+  assert.deepEqual(planAssignments([issue(1), issue(2)], config, new Map([[1, []]])), [{ number: 1, assignee: 'a' }]);
+});
