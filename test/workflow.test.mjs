@@ -53,6 +53,8 @@ test('collaboration workflows are pinned, PAT-free, and do not farm empty PRs or
   }
   const progress = await readFile(new URL('progress-report.yml', dir), 'utf8');
   assert.match(progress, /scripts\/progress\.mjs/);
+  assert.match(progress, /ref: \$\{\{ github\.event\.repository\.default_branch \}\}/);
+  assert.match(progress, /allow-unsafe-pr-checkout: false/);
   assert.doesNotMatch(progress, /issues:\s*write|pull-requests:\s*write/);
   const peer = await readFile(new URL('peer-review.yml', dir), 'utf8');
   assert.match(peer, /scripts\/peer-review\.mjs/);
@@ -63,6 +65,26 @@ test('collaboration workflows are pinned, PAT-free, and do not farm empty PRs or
   assert.doesNotMatch(peer, /merge|approve/i);
   const pair = await readFile(new URL('coauthor-validate.yml', dir), 'utf8');
   assert.match(pair, /scripts\/coauthor\.mjs/);
+  assert.match(pair, /ref: \$\{\{ github\.event\.repository\.default_branch \}\}/);
+  assert.match(pair, /allow-unsafe-pr-checkout: false/);
+  assert.doesNotMatch(pair, /pull_request_target:/);
+  assert.doesNotMatch(pair, /ref: \$\{\{ github\.event\.pull_request/);
+  assert.doesNotMatch(pair, /github\.head_ref/);
+});
+
+test('token-bearing workflows check out the trusted default branch; CI does not use GH_TOKEN', async () => {
+  const dir = new URL('../.github/workflows/', import.meta.url);
+  for (const name of ['hourly-maintenance.yml', 'peer-review.yml', 'coauthor-validate.yml', 'progress-report.yml']) {
+    const source = await readFile(new URL(name, dir), 'utf8');
+    assert.match(source, /GH_TOKEN: \$\{\{ github\.token \}\}/);
+    assert.match(source, /ref: \$\{\{ github\.event\.repository\.default_branch \}\}/);
+    assert.match(source, /allow-unsafe-pr-checkout: false/);
+    assert.doesNotMatch(source, /github\.head_ref/);
+    assert.doesNotMatch(source, /ref: \$\{\{ github\.event\.pull_request/);
+  }
+  const ci = await readFile(new URL('ci.yml', dir), 'utf8');
+  assert.doesNotMatch(ci, /GH_TOKEN/);
+  assert.doesNotMatch(ci, /issues:\s*write|pull-requests:\s*write/);
 });
 
 test('CI and co-author checks run when a draft PR is marked ready', async () => {

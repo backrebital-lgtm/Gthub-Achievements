@@ -37,30 +37,57 @@ test('validateConfig rejects a single participant or an out-of-range cap', () =>
   assert.throws(() => validateConfig({ ...base, maxPullsPerRun: 0 }), /Invalid limit/);
 });
 
-test('checkRepo requires privileged workflows to check out the default branch', async () => {
-  const root = await mkdtemp(path.join(tmpdir(), 'check-priv-'));
+function workflowStub({ extraEnv = '', extraPermissions = '  contents: read' } = {}) {
   const sha = 'a'.repeat(40);
+  return [
+    'name: stub',
+    'on: pull_request',
+    'permissions:',
+    extraPermissions,
+    'jobs:',
+    '  run:',
+    '    runs-on: ubuntu-latest',
+    '    steps:',
+    `      - uses: actions/checkout@${sha}`,
+    '        with:',
+    '          persist-credentials: false',
+    `      - uses: actions/setup-node@${sha}`,
+    '        with:',
+    "          node-version: '22'",
+    extraEnv
+  ].filter(Boolean).join('\n');
+}
+
+test('checkRepo requires write workflows to check out the default branch', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'check-priv-'));
   try {
     await mkdir(path.join(root, '.github', 'workflows'), { recursive: true });
-    await writeFile(path.join(root, '.github', 'workflows', 'priv.yml'), [
-      'name: priv',
-      'on: pull_request',
-      'permissions:',
-      '  pull-requests: write',
-      'jobs:',
-      '  request:',
-      '    runs-on: ubuntu-latest',
-      '    steps:',
-      `      - uses: actions/checkout@${sha}`,
-      '        with:',
-      '          persist-credentials: false',
-      `      - uses: actions/setup-node@${sha}`,
-      '        with:',
-      "          node-version: '22'"
-    ].join('\n'));
+    await writeFile(path.join(root, '.github', 'workflows', 'priv.yml'), workflowStub({
+      extraPermissions: '  pull-requests: write'
+    }));
     const errors = await checkRepo(root);
-    assert.ok(errors.some(e => /privileged workflows must check out the default branch/.test(e)));
-    assert.ok(errors.some(e => /privileged workflows must disable unsafe PR checkout/.test(e)));
+    assert.ok(errors.some(e => /token-bearing workflows must check out the default branch/.test(e)));
+    assert.ok(errors.some(e => /token-bearing workflows must disable unsafe PR checkout/.test(e)));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('checkRepo requires GH_TOKEN workflows to check out the default branch even without write', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'check-token-'));
+  try {
+    await mkdir(path.join(root, '.github', 'workflows'), { recursive: true });
+    await writeFile(path.join(root, '.github', 'workflows', 'token.yml'), workflowStub({
+      extraEnv: [
+        '      - run: node scripts/coauthor.mjs',
+        '        env:',
+        '          GH_TOKEN: ${{ github.token }}'
+      ].join('\n')
+    }));
+    const errors = await checkRepo(root);
+    assert.ok(errors.some(e => /token-bearing workflows must check out the default branch/.test(e)));
+    assert.ok(errors.some(e => /token-bearing workflows must disable unsafe PR checkout/.test(e)));
+    assert.ok(!errors.some(e => /must not check out PR head/.test(e)));
   } finally {
     await rm(root, { recursive: true, force: true });
   }

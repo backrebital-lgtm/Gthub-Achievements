@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.4
+
+- Token-bearing workflows (`Validate co-authors`, `Collaboration progress report`) check out the default branch only. Co-author validation still reads PR commits through the API; it does not execute the PR tree.
+- `npm run check` now treats any workflow that injects `GH_TOKEN` like a privileged checkout, not only jobs with `issues: write` or `pull-requests: write`.
+- `GITHUB_TOKEN` remains `github-actions[bot]` and does not grant Achievements.
+
 ## 0.3.3
 
 - Hourly coordinator refreshes the handoff report when a same-repo review is submitted or dismissed; comment-only reviews do not start a run.

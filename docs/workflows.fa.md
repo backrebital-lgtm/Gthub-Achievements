@@ -28,13 +28,15 @@
 
 | گردش‌کار | نقش | چه می‌کند | چه نمی‌کند |
 | --- | --- | --- | --- |
-| `CI` | سلامت | `npm test` و `npm run check` روی `opened` / `synchronize` / `reopened` / `ready_for_review` | درخواست بررسی، merge |
-| `Validate co-authors` | Pair Extraordinaire (قالب) | روی PR، trailerهای `Co-authored-by` را می‌سنجد | ایمیل را به حساب وصل نمی‌کند؛ trailer نمی‌سازد |
+| `CI` | سلامت | `npm test` و `npm run check` روی `opened` / `synchronize` / `reopened` / `ready_for_review`؛ **کد همان PR** را بدون `GH_TOKEN` اجرا می‌کند | درخواست بررسی، merge |
+| `Validate co-authors` | Pair Extraordinaire (قالب) | trailerهای `Co-authored-by` را از API همان PR می‌خواند و با **کد شاخهٔ پیش‌فرض** می‌سنجد | ایمیل را به حساب وصل نمی‌کند؛ trailer نمی‌سازد؛ کد PR را اجرا نمی‌کند |
 | `Request peer review` | بررسی متقابل | با باز شدن PR غیرپیش‌نویس یکی از دو عضو، از عضو دیگر بررسی می‌خواهد؛ **کد شاخهٔ پیش‌فرض** را اجرا می‌کند | approve، merge، تکرار درخواست موجود، اجرای کد PR |
 | `Hourly maintenance` | هماهنگی صف | واگذاری کار آماده، درخواست بررسی جاافتاده، به‌روزرسانی Issue وضعیت پس از تغییر صف یا ثبت/کنارگذاشتن review | کد نمی‌نویسد؛ PR خالی نمی‌سازد؛ merge نمی‌کند؛ review فقط-کامنت را اجرا نمی‌کند |
-| `Collaboration progress report` | پیگیری Pull Shark | با اجرا دستی یا دوشنبهٔ هفته (۰۳:۴۷ UTC) PRهای mergeشده را می‌شمارد و در Summary می‌نویسد | Issue/PR نمی‌سازد؛ نشان را تأیید نمی‌کند |
+| `Collaboration progress report` | پیگیری Pull Shark | با اجرا دستی یا دوشنبهٔ هفته (۰۳:۴۷ UTC) PRهای mergeشده را می‌شمارد؛ **کد شاخهٔ پیش‌فرض** را اجرا می‌کند | Issue/PR نمی‌سازد؛ نشان را تأیید نمی‌کند؛ شاخهٔ انتخاب‌شده در `workflow_dispatch` را اجرا نمی‌کند |
 
 `Hourly maintenance` را تغییر ندهید مگر برای هماهنگی صف. اجرای آزمایشی: Actions → Hourly maintenance → Run workflow با `dry_run` روشن.
+
+تغییر `scripts/coauthor.mjs` در یک PR را `CI` با کد همان PR آزمایش می‌کند؛ گردش‌کار `Validate co-authors` تا ادغام، نسخهٔ شاخهٔ پیش‌فرض را با توکن می‌خواند. این جداسازی عمدی است تا PR نتواند اعتبارسنجی را تضعیف کند.
 
 گزارش پیشرفت: Actions → Collaboration progress report → Run workflow. فقط Summary را بخوانید.
 
