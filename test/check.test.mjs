@@ -37,6 +37,35 @@ test('validateConfig rejects a single participant or an out-of-range cap', () =>
   assert.throws(() => validateConfig({ ...base, maxPullsPerRun: 0 }), /Invalid limit/);
 });
 
+test('checkRepo requires privileged workflows to check out the default branch', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'check-priv-'));
+  const sha = 'a'.repeat(40);
+  try {
+    await mkdir(path.join(root, '.github', 'workflows'), { recursive: true });
+    await writeFile(path.join(root, '.github', 'workflows', 'priv.yml'), [
+      'name: priv',
+      'on: pull_request',
+      'permissions:',
+      '  pull-requests: write',
+      'jobs:',
+      '  request:',
+      '    runs-on: ubuntu-latest',
+      '    steps:',
+      `      - uses: actions/checkout@${sha}`,
+      '        with:',
+      '          persist-credentials: false',
+      `      - uses: actions/setup-node@${sha}`,
+      '        with:',
+      "          node-version: '22'"
+    ].join('\n'));
+    const errors = await checkRepo(root);
+    assert.ok(errors.some(e => /privileged workflows must check out the default branch/.test(e)));
+    assert.ok(errors.some(e => /privileged workflows must disable unsafe PR checkout/.test(e)));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('checkRepo reports missing files and token-like strings', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'check-'));
   try {

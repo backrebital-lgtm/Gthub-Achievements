@@ -9,12 +9,17 @@ function assertPinned(source) {
 test('privileged coordinator checks out trusted default branch, never PR code', async () => {
   const source = await readFile(new URL('../.github/workflows/hourly-maintenance.yml', import.meta.url), 'utf8');
   assert.match(source, /pull_request_target:/);
+  assert.match(source, /pull_request_review:/);
+  assert.match(source, /types: \[submitted, dismissed\]/);
+  assert.match(source, /github\.event\.review\.state != 'commented'/);
+  assert.match(source, /github\.event\.pull_request\.head\.repo\.full_name == github\.repository/);
   assert.match(source, /ref: \$\{\{ github\.event\.repository\.default_branch \}\}/);
   assert.match(source, /persist-credentials: false/);
   assert.match(source, /allow-unsafe-pr-checkout: false/);
   assert.match(source, /scripts\/coordinate\.mjs/);
   assert.match(source, /cron: '17 \* \* \* \*'/);
-  assert.doesNotMatch(source, /pull_request\.head|github\.head_ref|secrets\./);
+  assert.doesNotMatch(source, /github\.head_ref|secrets\./);
+  assert.doesNotMatch(source, /ref: \$\{\{ github\.event\.pull_request/);
   assertPinned(source);
 });
 
@@ -51,6 +56,10 @@ test('collaboration workflows are pinned, PAT-free, and do not farm empty PRs or
   assert.doesNotMatch(progress, /issues:\s*write|pull-requests:\s*write/);
   const peer = await readFile(new URL('peer-review.yml', dir), 'utf8');
   assert.match(peer, /scripts\/peer-review\.mjs/);
+  assert.match(peer, /ref: \$\{\{ github\.event\.repository\.default_branch \}\}/);
+  assert.match(peer, /allow-unsafe-pr-checkout: false/);
+  assert.doesNotMatch(peer, /pull_request_target:/);
+  assert.doesNotMatch(peer, /ref: \$\{\{ github\.event\.pull_request/);
   assert.doesNotMatch(peer, /merge|approve/i);
   const pair = await readFile(new URL('coauthor-validate.yml', dir), 'utf8');
   assert.match(pair, /scripts\/coauthor\.mjs/);

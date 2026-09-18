@@ -5,6 +5,10 @@ on:
   pull_request_target:
     branches: [main]
     types: [opened, reopened, synchronize, ready_for_review, converted_to_draft, closed, review_requested, review_request_removed]
+  # Review submit/dismiss is a separate event; pull_request_target does not include it.
+  # GITHUB_REF for this event is the PR merge branch, so checkout must stay on the default branch.
+  pull_request_review:
+    types: [submitted, dismissed]
   schedule:
     - cron: '17 * * * *'
   workflow_dispatch:
@@ -20,7 +24,12 @@ concurrency:
   cancel-in-progress: false
 jobs:
   coordinate:
-    if: github.repository == 'ramincsy/Gthub-Achievements'
+    if: >
+      github.repository == 'ramincsy/Gthub-Achievements' &&
+      (github.event_name != 'pull_request_review' ||
+       (github.event.review.state != 'commented' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        github.event.pull_request.base.ref == github.event.repository.default_branch))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

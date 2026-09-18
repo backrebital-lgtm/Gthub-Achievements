@@ -30,8 +30,8 @@
 | --- | --- | --- | --- |
 | `CI` | سلامت | `npm test` و `npm run check` روی `opened` / `synchronize` / `reopened` / `ready_for_review` | درخواست بررسی، merge |
 | `Validate co-authors` | Pair Extraordinaire (قالب) | روی PR، trailerهای `Co-authored-by` را می‌سنجد | ایمیل را به حساب وصل نمی‌کند؛ trailer نمی‌سازد |
-| `Request peer review` | بررسی متقابل | با باز شدن PR غیرپیش‌نویس یکی از دو عضو، از عضو دیگر بررسی می‌خواهد | approve، merge، تکرار درخواست موجود |
-| `Hourly maintenance` | هماهنگی صف | واگذاری کار آماده، درخواست بررسی جاافتاده، Issue وضعیت در صورت تغییر | کد نمی‌نویسد؛ PR خالی نمی‌سازد؛ merge نمی‌کند |
+| `Request peer review` | بررسی متقابل | با باز شدن PR غیرپیش‌نویس یکی از دو عضو، از عضو دیگر بررسی می‌خواهد؛ **کد شاخهٔ پیش‌فرض** را اجرا می‌کند | approve، merge، تکرار درخواست موجود، اجرای کد PR |
+| `Hourly maintenance` | هماهنگی صف | واگذاری کار آماده، درخواست بررسی جاافتاده، به‌روزرسانی Issue وضعیت پس از تغییر صف یا ثبت/کنارگذاشتن review | کد نمی‌نویسد؛ PR خالی نمی‌سازد؛ merge نمی‌کند؛ review فقط-کامنت را اجرا نمی‌کند |
 | `Collaboration progress report` | پیگیری Pull Shark | با اجرا دستی یا دوشنبهٔ هفته (۰۳:۴۷ UTC) PRهای mergeشده را می‌شمارد و در Summary می‌نویسد | Issue/PR نمی‌سازد؛ نشان را تأیید نمی‌کند |
 
 `Hourly maintenance` را تغییر ندهید مگر برای هماهنگی صف. اجرای آزمایشی: Actions → Hourly maintenance → Run workflow با `dry_run` روشن.

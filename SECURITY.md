@@ -10,8 +10,8 @@
 
 - هیچ PAT، کوکی مرورگر، رمز حساب یا کلید API در git ذخیره نشود.
 - CI فقط خواندن محتوا دارد. هماهنگ‌کنندهٔ ساعتی فقط Issue، واگذاری و درخواست بررسی می‌نویسد.
-- `GITHUB_TOKEN` هویت `github-actions[bot]` است و معادل فعالیت شخصی ramincsy یا backrebital-lgtm نیست.
-- گردش‌کار `Hourly maintenance` رویداد `pull_request_target` را با checkout شاخهٔ پیش‌فرض اجرا می‌کند؛ کد PR اجرا نمی‌شود.
+- `GITHUB_TOKEN` هویت `github-actions[bot]` است و معادل فعالیت شخصی ramincsy یا backrebital-lgtm نیست و Achievement را تضمین نمی‌کند.
+- گردش‌کار `Hourly maintenance` رویدادهای `pull_request_target` و `pull_request_review` را با checkout شاخهٔ پیش‌فرض اجرا می‌کند؛ `Request peer review` هم با توکن نوشتن فقط همان شاخه را checkout می‌کند. کد PR اجرا نمی‌شود.
 - دو حساب یک مالک‌اند؛ این را برای دور زدن بررسی مستقل یا شبیه‌سازی فعالیت انسانی به کار نبرید.
 
 اگر توکنی اشتباهاً commit شد، آن را در GitHub revoke کنید، از تاریخچه حذفش را جداگانه برنامه‌ریزی کنید و در پیام عمومی فقط نوع راز را بگویید نه مقدار آن را.

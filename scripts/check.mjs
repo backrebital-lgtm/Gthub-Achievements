@@ -59,6 +59,17 @@ export async function checkRepo(root = '.') {
       }
       if (!/node-version:\s*'22'/.test(text)) errors.push(`${file}: expected Node.js 22`);
       if (!/persist-credentials:\s*false/.test(text)) errors.push(`${file}: persist-credentials must be false`);
+      if (/issues:\s*write|pull-requests:\s*write/.test(text)) {
+        if (!/ref:\s*\$\{\{\s*github\.event\.repository\.default_branch\s*\}\}/.test(text)) {
+          errors.push(`${file}: privileged workflows must check out the default branch`);
+        }
+        if (!/allow-unsafe-pr-checkout:\s*false/.test(text)) {
+          errors.push(`${file}: privileged workflows must disable unsafe PR checkout`);
+        }
+        if (/ref:\s*\$\{\{\s*github\.event\.pull_request/.test(text) || /github\.head_ref/.test(text)) {
+          errors.push(`${file}: privileged workflows must not check out PR head`);
+        }
+      }
     }
   }
   return errors;

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.3
+
+- Hourly coordinator refreshes the handoff report when a same-repo review is submitted or dismissed; comment-only reviews do not start a run.
+- Privileged workflows (`Hourly maintenance`, `Request peer review`) check out the default branch only. `GITHUB_TOKEN` remains `github-actions[bot]` and does not grant Achievements.
+
 ## 0.3.2
 
 - Dual-account workflows for co-author trailer checks, peer review requests and a read-only merged-PR progress report.
